@@ -12,6 +12,14 @@ export function renderCombatScreen(root: HTMLElement, state: GameState): void {
   const screen = document.createElement('div');
   screen.className = 'screen combat-screen';
 
+  screen.innerHTML = `
+    <div class="screen-header">
+      <div>
+        <h2>战斗中</h2>
+        <p class="screen-subtitle">选择卡牌或结束回合</p>
+      </div>
+    </div>
+  `;
   screen.appendChild(renderHud(state));
 
   const intents = getEnemyIntents(state);

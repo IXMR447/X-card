@@ -18,12 +18,12 @@ export function renderShopScreen(
   screen.appendChild(renderHud(state));
 
   if (!inventory) {
-    screen.innerHTML += '<p>商店加载中...</p>';
+    screen.insertAdjacentHTML('beforeend', '<p>商店加载中...</p>');
     root.appendChild(screen);
     return;
   }
 
-  screen.innerHTML += '<h2>商店</h2>';
+  screen.insertAdjacentHTML('beforeend', '<h2>商店</h2>');
 
   const addSection = (
     title: string,
@@ -78,7 +78,7 @@ export function renderShopScreen(
   addSection('药水', inventory.potions, (s, id, p) => buyPotion(s, id, p), (id) => getPotion(id)?.name ?? id);
 
   const leaveBtn = document.createElement('button');
-  leaveBtn.className = 'btn btn-primary';
+  leaveBtn.className = 'btn btn-secondary';
   leaveBtn.textContent = '离开商店';
   leaveBtn.addEventListener('click', () => {
     gameManager.updateState((s) => leaveShop(s));

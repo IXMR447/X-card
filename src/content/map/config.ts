@@ -1,5 +1,4 @@
 import type { MapGenerationConfig } from '@/entities';
-import { MAP } from '@/core/constants';
 
 /** 地图生成配置 — 本最小版本为 12 层 Act，包含精英与 Boss 节点 */
 export const mapConfig: MapGenerationConfig = {

@@ -8,20 +8,32 @@ import { createCardElement } from '@/ui/components/CardView';
 export function renderCampfireScreen(root: HTMLElement, state: GameState): void {
   const screen = document.createElement('div');
   screen.className = 'screen campfire-screen';
-  screen.appendChild(renderHud(state));
-
-  screen.innerHTML += `
-    <h2>篝火</h2>
-    <p>选择一项行动</p>
+  screen.innerHTML = `
+    <div class="screen-header">
+      <div>
+        <h2>篝火</h2>
+        <p class="screen-subtitle">休息或升级一张卡牌</p>
+      </div>
+      <button class="btn btn-secondary" id="btn-leave-campfire">离开篝火</button>
+    </div>
   `;
 
-  const restBtn = document.createElement('button');
-  restBtn.className = 'btn btn-primary';
-  restBtn.textContent = '休息 — 恢复 30% 最大生命';
+  screen.appendChild(renderHud(state));
+
+  screen.insertAdjacentHTML('beforeend', `
+    <div class="panel campfire-actions">
+      <button class="btn btn-primary" id="btn-rest">休息 — 恢复 30% 最大生命</button>
+    </div>
+  `);
+
+  const restBtn = screen.querySelector('#btn-rest') as HTMLButtonElement;
   restBtn.addEventListener('click', () => {
     gameManager.updateState((s) => restAtCampfire(s));
   });
-  screen.appendChild(restBtn);
+
+  screen.querySelector('#btn-leave-campfire')?.addEventListener('click', () => {
+    gameManager.updateState((s) => ({ ...s, phase: 'map' }));
+  });
 
   const upgradeable = getUpgradeableCards(state);
   if (upgradeable.length > 0) {
