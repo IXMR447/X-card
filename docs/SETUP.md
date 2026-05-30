@@ -281,6 +281,8 @@ npm run typecheck  # 仅类型检查
 - 调整后效果会立即生效，无需刷新页面
 - 配置主要作用于 `src/styles/main.css` 中的卡牌交互样式变量
 
+此外，战斗界面将手牌以扇形方式排列，支持将卡牌拖放到敌人卡片或自身区域进行交互。拖拽时会显示箭头指示当前应用方向。
+
 如果希望将该功能扩展为持久化配置，可在 `src/ui/components/UiConfigPanel.ts` 中添加 `localStorage` 读写逻辑。
 
 ---

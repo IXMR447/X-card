@@ -60,6 +60,10 @@ body::before {
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.32);
 }
 
+.combat-screen {
+  position: relative;
+}
+
 .screen-header {
   display: flex;
   justify-content: space-between;
@@ -364,8 +368,42 @@ body::before {
   margin-bottom: 1.1rem;
 }
 
+.enemy-card,
 .enemy-unit {
   background: rgba(255, 255, 255, 0.04);
+  border-radius: calc(var(--radius) * 0.95);
+  padding: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.enemy-card {
+  width: min(280px, 100%);
+  max-width: 280px;
+  min-height: 220px;
+  cursor: pointer;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04);
+}
+
+.enemy-card.active-target,
+.player-drop-target.active-target {
+  border-color: rgba(107, 155, 209, 0.7);
+  box-shadow: 0 0 0 2px rgba(107, 155, 209, 0.18);
+}
+
+.player-drop-target {
+  position: relative;
+  min-height: 120px;
+  border: 1px dashed rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.02);
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.player-drop-target p {
+  margin: 0.5rem 0 0;
+  color: var(--muted);
+}
+
+.enemy-unit {
   border-radius: calc(var(--radius) * 0.95);
   padding: 1rem;
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -395,12 +433,83 @@ body::before {
 }
 
 .hand {
-  display: flex;
-  justify-content: center;
-  align-items: flex-end;
-  flex-wrap: wrap;
-  gap: var(--hand-card-spacing);
-  margin: 1rem 0;
+  position: relative;
+  width: 100%;
+  min-height: 320px;
+  margin: 1rem 0 0;
+}
+
+.hand.fan-hand {
+  display: block;
+}
+
+.hand-card-slot {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%) rotate(var(--hand-card-angle));
+  transform-origin: bottom center;
+  pointer-events: auto;
+}
+
+.hand-card-slot .card {
+  transform: rotate(calc(-1 * var(--hand-card-angle)));
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.hand-card-slot .card-hovered {
+  transform: rotate(calc(-1 * var(--hand-card-angle))) translateY(-1rem) scale(1.03);
+}
+
+.hand-card-slot.drag-source .card {
+  opacity: 0.45;
+}
+
+.drag-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.drag-arrow {
+  position: absolute;
+  height: 4px;
+  width: 0;
+  background: linear-gradient(90deg, rgba(212, 168, 83, 0.95), rgba(255, 255, 255, 0.95));
+  border-radius: 999px;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+
+.drag-arrow::after {
+  content: '';
+  position: absolute;
+  right: -5px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 10px;
+  height: 10px;
+  clip-path: polygon(0 0, 100% 50%, 0 100%);
+  background: rgba(212, 168, 83, 0.95);
+}
+
+.drag-overlay.active .drag-arrow {
+  opacity: 1;
+}
+
+.drag-ghost {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+  opacity: 0.98;
+  transform: translate(-50%, -50%);
+  display: none;
+  z-index: 40;
+}
+
+.drag-ghost.visible {
+  display: block;
 }
 
 .ui-config-panel {
