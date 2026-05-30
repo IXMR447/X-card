@@ -1,13 +1,28 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
 
-// GitHub Pages 部署路径
-// 若仓库名为 X-card，访问地址为 https://<username>.github.io/X-card/
-// 若使用 username.github.io 根域名仓库，请将 base 改为 '/'
-const REPO_NAME = 'X-card';
+function normalizeBasePath(value: string): string {
+  if (value === '/' || value === './') return value;
+  const withLeadingSlash = value.startsWith('/') ? value : `/${value}`;
+  return withLeadingSlash.endsWith('/') ? withLeadingSlash : `${withLeadingSlash}/`;
+}
+
+function getBasePath(): string {
+  if (process.env.VITE_BASE_PATH) {
+    return normalizeBasePath(process.env.VITE_BASE_PATH);
+  }
+
+  const [owner, repo] = process.env.GITHUB_REPOSITORY?.split('/') ?? [];
+  if (owner && repo) {
+    const isUserPagesRepo = repo.toLowerCase() === `${owner.toLowerCase()}.github.io`;
+    return isUserPagesRepo ? '/' : `/${repo}/`;
+  }
+
+  return '/X-card/';
+}
 
 export default defineConfig({
-  base: `/${REPO_NAME}/`,
+  base: getBasePath(),
   resolve: {
     alias: {
       '@': resolve(__dirname, 'src'),

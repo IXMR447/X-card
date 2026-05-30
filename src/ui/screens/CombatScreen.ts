@@ -65,8 +65,16 @@ function placeEffect(screen: HTMLElement, className: string, target: HTMLElement
   effect.className = `combat-effect ${className}`;
   effect.style.left = `${targetRect.left - screenRect.left + targetRect.width / 2}px`;
   effect.style.top = `${targetRect.top - screenRect.top + targetRect.height / 2}px`;
+  for (let i = 0; i < 10; i += 1) {
+    const spark = document.createElement('span');
+    spark.className = 'combat-effect-spark';
+    spark.style.setProperty('--spark-angle', `${i * 36}deg`);
+    spark.style.setProperty('--spark-distance', `${42 + (i % 3) * 18}px`);
+    spark.style.setProperty('--spark-delay', `${i * 18}ms`);
+    effect.appendChild(spark);
+  }
   screen.appendChild(effect);
-  window.setTimeout(() => effect.remove(), 620);
+  window.setTimeout(() => effect.remove(), 860);
   return effect;
 }
 
@@ -93,13 +101,18 @@ export function renderCombatScreen(root: HTMLElement, state: GameState): void {
   if (!state.combat) return;
 
   const screen = document.createElement('div');
-  screen.className = 'screen combat-screen';
+  screen.className = `screen combat-screen combat-${state.combat.type}`;
   const character = getCharacter(state.characterId);
   screen.innerHTML = `
     <div class="combat-topbar">
       <div>
         <p class="combat-kicker">第 ${state.combat.turn} 回合</p>
         <h2>战斗中</h2>
+      </div>
+      <div class="combat-system-readout" aria-hidden="true">
+        <span>SYNC ${Math.min(99, 62 + state.combat.turn * 7)}%</span>
+        <span>HOSTILES ${state.combat.enemies.length}</span>
+        <span>FLOW ${state.energy}/${state.maxEnergy}</span>
       </div>
       <div class="combat-piles" aria-label="牌堆信息">
         <span>抽牌 ${state.combat.drawPile.length}</span>
@@ -122,6 +135,15 @@ export function renderCombatScreen(root: HTMLElement, state: GameState): void {
 
   const arena = document.createElement('section');
   arena.className = 'combat-arena';
+  arena.innerHTML = `
+    <div class="arena-holo-grid" aria-hidden="true"></div>
+    <div class="arena-scan-beam" aria-hidden="true"></div>
+    <div class="arena-orbit arena-orbit-one" aria-hidden="true"></div>
+    <div class="arena-orbit arena-orbit-two" aria-hidden="true"></div>
+    <div class="arena-data-rain" aria-hidden="true">
+      <span></span><span></span><span></span><span></span><span></span>
+    </div>
+  `;
 
   const enemyArea = document.createElement('div');
   enemyArea.className = 'enemy-area';
@@ -139,11 +161,14 @@ export function renderCombatScreen(root: HTMLElement, state: GameState): void {
     el.className = `enemy-card enemy-tier-${def?.tier ?? 'normal'}`;
     el.dataset.enemyId = enemy.instanceId;
     el.innerHTML = `
+      <div class="enemy-card-glow" aria-hidden="true"></div>
+      <div class="enemy-target-reticle" aria-hidden="true"></div>
       <div class="enemy-intent-token intent-${intentType}">
         <strong>${INTENT_ICON[intentType] ?? '?'}</strong>
         <span>${intentText}</span>
       </div>
       <div class="enemy-portrait" aria-hidden="true">
+        <span class="enemy-aura"></span>
         <img class="enemy-sprite" src="${resolveAssetUrl(`assets/enemies/${enemy.definitionId}.svg`)}" alt="${def?.name ?? enemy.definitionId}" />
         <span class="enemy-sprite-fallback">${(def?.name ?? enemy.definitionId).slice(0, 1)}</span>
       </div>
@@ -158,6 +183,9 @@ export function renderCombatScreen(root: HTMLElement, state: GameState): void {
         <span>HP ${enemy.hp}/${maxHp}</span>
         <span class="${enemy.block ? '' : 'is-empty'}">格挡 ${enemy.block}</span>
       </div>
+      <div class="enemy-signal-row" aria-hidden="true">
+        <span></span><span></span><span></span>
+      </div>
     `;
     enemyArea.appendChild(el);
   }
@@ -168,6 +196,7 @@ export function renderCombatScreen(root: HTMLElement, state: GameState): void {
   const hpPct = Math.max(0, Math.min(100, (state.hp / state.maxHp) * 100));
   playerArea.innerHTML = `
     <div class="player-avatar">
+      <span class="player-shield-ring" aria-hidden="true"></span>
       ${
         character?.portrait
           ? `<img class="player-portrait-img" src="${resolveAssetUrl(character.portrait)}" alt="${character.name}" />`
@@ -175,6 +204,7 @@ export function renderCombatScreen(root: HTMLElement, state: GameState): void {
       }
     </div>
     <div class="player-panel-body">
+      <div class="player-panel-glow" aria-hidden="true"></div>
       <div class="player-name-row">
         <strong>${character?.name ?? '探索者'}</strong>
         <span>可将技能/能力牌拖到这里</span>
