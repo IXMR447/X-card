@@ -19,8 +19,8 @@
   --power: #7d5bb3;
   --block: #69a6b7;
   --hand-card-spacing: 0.95rem;
-  --card-hover-scale: 1.08;
-  --card-hover-lift: -1rem;
+  --card-hover-scale: 1.06;
+  --card-hover-lift: -1.35rem;
   --card-hover-rotation: 0deg;
   --card-disabled-opacity: 0.45;
   --radius: 8px;
@@ -495,8 +495,8 @@ body::before {
   position: relative;
   z-index: 2;
   width: 100%;
-  min-height: 295px;
-  margin: 0.5rem 0 0;
+  min-height: 330px;
+  margin: 0.8rem 0 0;
 }
 
 .hand-card-slot {
@@ -511,6 +511,7 @@ body::before {
 
 .hand-card-slot .card {
   transform: rotate(calc(-1 * var(--hand-card-angle)));
+  filter: drop-shadow(0 12px 16px rgba(0, 0, 0, 0.24));
 }
 
 .hand-card-slot .card-hovered {
@@ -614,17 +615,20 @@ body::before {
   position: relative;
   display: flex;
   flex-direction: column;
-  width: 180px;
-  min-height: 260px;
+  width: 184px;
+  min-height: 278px;
   overflow: hidden;
   color: #2b180f;
   background:
-    linear-gradient(180deg, rgba(255, 240, 198, 0.95), rgba(218, 179, 116, 0.98)),
+    linear-gradient(180deg, rgba(255, 246, 214, 0.98), rgba(226, 188, 121, 0.99) 58%, rgba(182, 129, 68, 0.98)),
     #ecd29b;
   border: 3px solid #5f3723;
-  border-radius: 10px;
+  border-radius: 12px;
   cursor: pointer;
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.34), inset 0 0 0 2px rgba(255, 255, 255, 0.22);
+  box-shadow:
+    0 14px 26px rgba(0, 0, 0, 0.36),
+    inset 0 0 0 2px rgba(255, 255, 255, 0.26),
+    inset 0 -18px 30px rgba(84, 43, 18, 0.1);
   transform-origin: bottom center;
   transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease, filter 0.16s ease;
 }
@@ -650,15 +654,15 @@ button.card:disabled,
   content: '';
   position: absolute;
   inset: 0;
-  border-radius: 7px;
-  border: 1px solid rgba(65, 34, 18, 0.5);
+  border-radius: 9px;
+  border: 1px solid rgba(65, 34, 18, 0.48);
   pointer-events: none;
   z-index: 3;
 }
 
 .card-hand {
-  width: clamp(150px, 14vw, 188px);
-  min-height: clamp(226px, 20vw, 268px);
+  width: clamp(168px, 14.5vw, 194px);
+  min-height: clamp(258px, 21vw, 286px);
 }
 
 .card-reward {
@@ -681,18 +685,19 @@ button.card:disabled,
 .card-art {
   display: grid;
   place-items: center;
-  height: 42%;
-  min-height: 92px;
-  margin: 0.55rem 0.55rem 0;
+  height: 39%;
+  min-height: 96px;
+  margin: 0.6rem 0.6rem 0;
   overflow: hidden;
   border: 2px solid rgba(78, 42, 24, 0.55);
-  border-radius: 7px;
+  border-radius: 9px;
   background:
     radial-gradient(circle at 50% 36%, rgba(255, 236, 168, 0.32), transparent 36%),
     linear-gradient(160deg, #7d3d32, #263d4b);
   color: rgba(255, 238, 181, 0.85);
   font-size: 2.4rem;
   font-weight: 900;
+  box-shadow: inset 0 0 22px rgba(255, 255, 255, 0.16), inset 0 -16px 22px rgba(0, 0, 0, 0.18);
 }
 
 .card-art-img {
@@ -711,9 +716,9 @@ button.card:disabled,
 .card-body {
   display: grid;
   grid-template-rows: auto auto 1fr auto;
-  gap: 0.36rem;
+  gap: 0.4rem;
   flex: 1;
-  padding: 0.65rem 0.72rem 0.72rem;
+  padding: 0.7rem 0.78rem 0.78rem;
 }
 
 .card-header {
@@ -725,7 +730,7 @@ button.card:disabled,
 
 .card-name {
   color: #2e170c;
-  font-size: 1rem;
+  font-size: 1.03rem;
   font-weight: 900;
   line-height: 1.15;
 }
@@ -767,24 +772,24 @@ button.card:disabled,
 
 .card-desc {
   display: block;
-  min-height: 3.6rem;
-  padding: 0.48rem;
+  min-height: 4.15rem;
+  padding: 0.52rem;
   color: #3e2516;
-  background: rgba(255, 249, 224, 0.55);
+  background: linear-gradient(180deg, rgba(255, 250, 226, 0.76), rgba(246, 224, 174, 0.58));
   border: 1px solid rgba(74, 39, 22, 0.16);
-  border-radius: 6px;
-  font-size: 0.83rem;
-  line-height: 1.42;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  line-height: 1.46;
 }
 
 .card-cost {
   position: absolute;
-  top: 0.2rem;
-  left: 0.2rem;
+  top: 0.16rem;
+  left: 0.16rem;
   display: grid;
   place-items: center;
-  min-width: 2.35rem;
-  height: 2.35rem;
+  min-width: 2.45rem;
+  height: 2.45rem;
   padding: 0.2rem;
   border-radius: 50%;
   background:
@@ -922,7 +927,6 @@ button.card:disabled,
   border: 1px solid rgba(255, 225, 160, 0.16);
 }
 
-.map-container,
 .campfire-actions,
 .campfire-upgrade-grid,
 .event-panel {
@@ -963,21 +967,18 @@ button.card:disabled,
   background: #5ba6b7;
 }
 
-.map-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.65rem 0;
-  border-bottom: 1px solid rgba(255, 228, 173, 0.1);
+.map-legend-marker.visited {
+  background: rgba(255, 255, 255, 0.28);
 }
 
-.floor-label {
-  width: 5rem;
-  color: var(--muted);
+.map-legend-line {
+  display: inline-block;
+  width: 1.9rem;
+  height: 0.18rem;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(226, 177, 95, 0.25), rgba(226, 177, 95, 0.78));
 }
 
-.map-node,
 .event-choice,
 .shop-item,
 .shop-card-row {
@@ -987,10 +988,100 @@ button.card:disabled,
   color: var(--text);
 }
 
+.map-tree-viewport {
+  position: relative;
+  overflow: auto;
+  padding: 1rem;
+  border: 1px solid rgba(255, 228, 173, 0.12);
+  border-radius: var(--radius);
+  background:
+    radial-gradient(ellipse at center bottom, rgba(78, 45, 28, 0.45), transparent 65%),
+    rgba(13, 10, 9, 0.48);
+}
+
+.map-tree {
+  position: relative;
+  margin: 0 auto;
+}
+
+.map-link-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.map-link {
+  fill: none;
+  stroke: rgba(176, 135, 82, 0.28);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-dasharray: 5 10;
+}
+
+.map-link-seen {
+  stroke: rgba(218, 177, 104, 0.46);
+  stroke-dasharray: none;
+}
+
+.map-link-available {
+  stroke: rgba(103, 205, 223, 0.88);
+  stroke-width: 5;
+  filter: drop-shadow(0 0 8px rgba(103, 205, 223, 0.32));
+}
+
+.map-floor-label {
+  position: absolute;
+  left: 0.75rem;
+  transform: translateY(-50%);
+  color: rgba(244, 218, 165, 0.58);
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  pointer-events: none;
+}
+
 .map-node {
-  min-width: 138px;
-  padding: 0.78rem 0.9rem;
+  position: absolute;
+  display: grid;
+  place-items: center;
+  gap: 0.12rem;
+  width: 4.85rem;
+  height: 4.85rem;
+  padding: 0.4rem;
+  transform: translate(-50%, -50%);
+  border: 2px solid rgba(255, 228, 173, 0.2);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 38% 28%, rgba(255, 255, 255, 0.24), transparent 22%),
+    linear-gradient(180deg, rgba(80, 58, 42, 0.98), rgba(30, 22, 18, 0.98));
+  color: var(--text);
   cursor: pointer;
+  box-shadow: 0 12px 22px rgba(0, 0, 0, 0.35), inset 0 -10px 16px rgba(0, 0, 0, 0.18);
+  transition: transform 0.14s ease, border-color 0.14s ease, box-shadow 0.14s ease, filter 0.14s ease;
+}
+
+.map-node:disabled {
+  cursor: not-allowed;
+}
+
+.map-node-icon {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  color: #fff0ca;
+  font-size: 1.05rem;
+  font-weight: 900;
+}
+
+.map-node-label {
+  color: rgba(255, 238, 201, 0.84);
+  font-size: 0.7rem;
+  font-weight: 800;
+  line-height: 1;
 }
 
 .map-node:hover:not(:disabled),
@@ -998,15 +1089,74 @@ button.card:disabled,
 .shop-item:hover,
 .shop-card-row:hover {
   border-color: rgba(226, 177, 95, 0.62);
-  background: rgba(87, 62, 42, 0.72);
+  background:
+    radial-gradient(circle at 38% 28%, rgba(255, 255, 255, 0.28), transparent 22%),
+    linear-gradient(180deg, rgba(102, 72, 47, 0.98), rgba(42, 28, 21, 0.98));
+}
+
+.map-node:hover:not(:disabled) {
+  transform: translate(-50%, -50%) scale(1.08);
+  box-shadow: 0 16px 30px rgba(0, 0, 0, 0.42), 0 0 0 3px rgba(226, 177, 95, 0.14);
 }
 
 .map-node.visited {
-  opacity: 0.55;
+  opacity: 0.68;
+  border-color: rgba(255, 235, 190, 0.26);
 }
 
 .map-node.available {
-  box-shadow: 0 0 0 2px rgba(91, 166, 183, 0.18);
+  border-color: rgba(103, 205, 223, 0.82);
+  box-shadow: 0 0 0 3px rgba(91, 166, 183, 0.22), 0 16px 30px rgba(0, 0, 0, 0.4);
+  animation: mapNodePulse 1.9s ease-in-out infinite;
+}
+
+.map-node.current {
+  border-color: rgba(255, 211, 124, 0.95);
+  box-shadow: 0 0 0 4px rgba(226, 177, 95, 0.18), 0 18px 34px rgba(0, 0, 0, 0.42);
+}
+
+.map-node-start {
+  background: linear-gradient(180deg, #4b7165, #20342f);
+}
+
+.map-node-combat {
+  background: linear-gradient(180deg, #845141, #351d17);
+}
+
+.map-node-elite {
+  background: linear-gradient(180deg, #a8613d, #3f1e15);
+}
+
+.map-node-boss {
+  width: 5.6rem;
+  height: 5.6rem;
+  background: radial-gradient(circle at 50% 28%, rgba(255, 223, 142, 0.28), transparent 28%), linear-gradient(180deg, #8e3d33, #1d1212);
+}
+
+.map-node-event {
+  background: linear-gradient(180deg, #6f5a8d, #2b2242);
+}
+
+.map-node-shop {
+  background: linear-gradient(180deg, #8f7540, #3a2b18);
+}
+
+.map-node-campfire {
+  background: linear-gradient(180deg, #ba6b37, #452313);
+}
+
+.map-node-treasure {
+  background: linear-gradient(180deg, #a58346, #432e16);
+}
+
+@keyframes mapNodePulse {
+  0%,
+  100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.16);
+  }
 }
 
 .shop-section {
@@ -1134,13 +1284,13 @@ button.card:disabled,
   }
 
   .hand {
-    min-height: 260px;
-    overflow-x: clip;
+    min-height: 286px;
+    overflow: visible;
   }
 
   .card-hand {
-    width: 142px;
-    min-height: 220px;
+    width: 150px;
+    min-height: 238px;
   }
 
   .card-name {
@@ -1148,7 +1298,23 @@ button.card:disabled,
   }
 
   .card-desc {
+    min-height: 4rem;
     font-size: 0.76rem;
+    line-height: 1.38;
+  }
+
+  .map-tree-viewport {
+    padding: 0.5rem;
+  }
+
+  .map-node {
+    width: 4.45rem;
+    height: 4.45rem;
+  }
+
+  .map-node-boss {
+    width: 5.1rem;
+    height: 5.1rem;
   }
 
   .combat-actions {

@@ -10,7 +10,6 @@ import { renderShopScreen } from './screens/ShopScreen';
 import { renderCampfireScreen } from './screens/CampfireScreen';
 import { renderEventScreen } from './screens/EventScreen';
 import { renderGameOverScreen } from './screens/GameOverScreen';
-import { createUiConfigPanel, applyUiConfig } from './components/UiConfigPanel';
 
 export class GameApp {
   private root: HTMLElement;
@@ -21,7 +20,6 @@ export class GameApp {
   }
 
   init(): void {
-    applyUiConfig();
     this.render(gameManager.getState());
   }
 
@@ -68,7 +66,6 @@ export class GameApp {
     }
 
     this.root.appendChild(screenRoot);
-    this.root.appendChild(createUiConfigPanel());
   }
 
   private renderTreasure(_state: GameState, root: HTMLElement): void {

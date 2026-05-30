@@ -162,8 +162,8 @@ export function renderCombatScreen(root: HTMLElement, state: GameState): void {
   hand.className = 'hand fan-hand';
   const handCount = state.combat.hand.length;
   const midIndex = (handCount - 1) / 2;
-  const spacing = Math.min(8.4, Math.max(4.8, 42 / Math.max(handCount, 1)));
-  const spreadAngle = Math.min(58, Math.max(20, handCount * 8));
+  const spacing = handCount <= 4 ? 12.2 : handCount <= 6 ? 10.7 : handCount <= 8 ? 9.2 : 7.8;
+  const spreadAngle = handCount <= 1 ? 0 : Math.min(34, Math.max(14, handCount * 4.4));
 
   let activeDrag: DragState | null = null;
 
@@ -306,7 +306,7 @@ export function renderCombatScreen(root: HTMLElement, state: GameState): void {
     const angle = handCount === 1 ? 0 : (normalized / Math.max(handCount - 1, 1)) * spreadAngle;
     wrapper.style.setProperty('--hand-card-angle', `${angle}deg`);
     wrapper.style.setProperty('--hand-card-x', `${normalized * spacing}rem`);
-    wrapper.style.setProperty('--hand-card-lift', `${Math.abs(normalized) * -0.18}rem`);
+    wrapper.style.setProperty('--hand-card-lift', `${Math.abs(normalized) * -0.28}rem`);
     wrapper.style.zIndex = String(index + 1);
 
     const cardEl = createCardElement({
