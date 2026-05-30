@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 220" role="img" aria-label="Spark dash card art">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#ffd276"/>
+      <stop offset="1" stop-color="#8a271b"/>
+    </linearGradient>
+  </defs>
+  <rect width="320" height="220" fill="url(#bg)"/>
+  <path d="M38 132h102L117 192l126-104H142l30-60z" fill="#fff3ae"/>
+  <path d="M65 68c60 8 112 28 168 75" fill="none" stroke="#5d1b15" stroke-width="14" stroke-linecap="round" opacity=".55"/>
+  <circle cx="245" cy="75" r="20" fill="#fff0a8"/>
+</svg>

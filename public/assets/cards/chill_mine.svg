@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 220" role="img" aria-label="Chill mine card art">
+  <defs>
+    <radialGradient id="bg" cx=".5" cy=".5" r=".72">
+      <stop offset="0" stop-color="#eaffff"/>
+      <stop offset=".45" stop-color="#5bb7d9"/>
+      <stop offset="1" stop-color="#1b3656"/>
+    </radialGradient>
+  </defs>
+  <rect width="320" height="220" fill="url(#bg)"/>
+  <circle cx="160" cy="122" r="54" fill="#dffbff"/>
+  <circle cx="160" cy="122" r="28" fill="#2d7192"/>
+  <path d="M160 42v35M160 166v35M80 122h35M205 122h35M103 65l25 25M217 65l-25 25M103 179l25-25M217 179l-25-25" stroke="#f2ffff" stroke-width="10" stroke-linecap="round"/>
+</svg>

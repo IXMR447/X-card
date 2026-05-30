@@ -1,7 +1,7 @@
-import type { GameState, CardInstance } from '@/entities';
+import type { CardDefinition, CardInstance, GameState } from '@/entities';
 import { gameManager } from '@/core/GameManager';
-import { playCard, endPlayerTurn, getEnemyIntents } from '@/systems/combat/CombatSystem';
-import { getCard, getCardCost } from '@/core/registries/CardRegistry';
+import { playCard, endPlayerTurn } from '@/systems/combat/CombatSystem';
+import { getCard, getCardCost, getCardEffects } from '@/core/registries/CardRegistry';
 import { getEnemy } from '@/core/registries/EnemyRegistry';
 import { renderHud } from '@/ui/components/Hud';
 import { createCardElement } from '@/ui/components/CardView';
@@ -14,72 +14,67 @@ interface DragState {
   target: HTMLElement | null;
 }
 
+const TIER_LABEL: Record<string, string> = {
+  normal: '普通',
+  elite: '精英',
+  boss: '首领',
+};
+
+const INTENT_LABEL: Record<string, string> = {
+  attack: '攻击',
+  defend: '防御',
+  buff: '强化',
+  debuff: '削弱',
+  summon: '召唤',
+  unknown: '未知',
+};
+
+const INTENT_ICON: Record<string, string> = {
+  attack: '!',
+  defend: '◆',
+  buff: '↑',
+  debuff: '↓',
+  summon: '+',
+  unknown: '?',
+};
+
+function cardNeedsEnemyTarget(def: CardDefinition, upgraded: boolean): boolean {
+  return Boolean(getCardEffects(def, upgraded).damage);
+}
+
+function canDropCardOnTarget(cardInst: CardInstance, target: HTMLElement | null): boolean {
+  if (!target) return false;
+  const def = getCard(cardInst.definitionId);
+  if (!def) return false;
+  const needsEnemy = cardNeedsEnemyTarget(def, cardInst.upgraded);
+  return needsEnemy ? Boolean(target.dataset.enemyId) : target.dataset.dropTarget === 'player';
+}
+
+function getCardPlayReason(def: CardDefinition, cardInst: CardInstance, state: GameState): string {
+  const cost = getCardCost(def, cardInst.upgraded);
+  if (state.energy < cost) return `能量不足：需要 ${cost} 点能量`;
+  return cardNeedsEnemyTarget(def, cardInst.upgraded) ? '拖到敌人身上打出' : '拖到角色身上打出';
+}
+
 export function renderCombatScreen(root: HTMLElement, state: GameState): void {
   if (!state.combat) return;
 
   const screen = document.createElement('div');
   screen.className = 'screen combat-screen';
-
   screen.innerHTML = `
-    <div class="screen-header">
+    <div class="combat-topbar">
       <div>
+        <p class="combat-kicker">第 ${state.combat.turn} 回合</p>
         <h2>战斗中</h2>
-        <p class="screen-subtitle">选择卡牌，观察敌人意图并结束回合</p>
+      </div>
+      <div class="combat-piles" aria-label="牌堆信息">
+        <span>抽牌 ${state.combat.drawPile.length}</span>
+        <span>弃牌 ${state.combat.discardPile.length}</span>
+        <span>消耗 ${state.combat.exhaustPile.length}</span>
       </div>
     </div>
   `;
   screen.appendChild(renderHud(state));
-
-  const battleSummary = document.createElement('div');
-  battleSummary.className = 'battle-summary panel';
-  battleSummary.innerHTML = `
-    <p><strong>敌人数量：</strong>${state.combat.enemies.length}</p>
-    <p><strong>当前格挡：</strong>${state.combat.playerBlock}</p>
-    <p><strong>能量剩余：</strong>${state.energy}/${state.maxEnergy}</p>
-  `;
-  screen.appendChild(battleSummary);
-
-  const intents = getEnemyIntents(state);
-
-  const enemyArea = document.createElement('div');
-  enemyArea.className = 'enemy-area';
-  for (const enemy of state.combat.enemies) {
-    const def = getEnemy(enemy.definitionId);
-    const intent = intents.get(enemy.instanceId) ?? '?';
-    const el = document.createElement('div');
-    el.className = 'card enemy-card';
-    el.dataset.enemyId = enemy.instanceId;
-    el.innerHTML = `
-      <div class="card-body">
-        <div class="card-header">
-          <span class="card-name">${def?.name ?? enemy.definitionId}</span>
-          <span class="card-type">${def?.tier?.toUpperCase() ?? 'ENEMY'}</span>
-        </div>
-        <div class="enemy-stats">
-          <div class="enemy-hp">HP: ${enemy.hp}${def ? ` / ${def.maxHp}` : ''}</div>
-          <div class="enemy-intent">意图: ${intent}</div>
-          <div class="enemy-block" ${enemy.block ? '' : 'style="display:none"'}>🛡 ${enemy.block}</div>
-        </div>
-      </div>
-    `;
-    enemyArea.appendChild(el);
-  }
-  screen.appendChild(enemyArea);
-
-  const playerArea = document.createElement('div');
-  playerArea.className = 'player-combat-info panel player-drop-target';
-  playerArea.innerHTML = `
-    <div class="player-block">格挡: ${state.combat.playerBlock}</div>
-    <p>拖动卡牌到这里以对自身施放非伤害效果</p>
-  `;
-  playerArea.dataset.dropTarget = 'player';
-  screen.appendChild(playerArea);
-
-  const hand = document.createElement('div');
-  hand.className = 'hand fan-hand';
-  const handCount = state.combat.hand.length;
-  const spreadAngle = 56;
-  const midIndex = (handCount - 1) / 2;
 
   const dragOverlay = document.createElement('div');
   dragOverlay.className = 'drag-overlay';
@@ -90,6 +85,85 @@ export function renderCombatScreen(root: HTMLElement, state: GameState): void {
   dragOverlay.appendChild(dragArrow);
   dragOverlay.appendChild(dragGhost);
   screen.appendChild(dragOverlay);
+
+  const arena = document.createElement('section');
+  arena.className = 'combat-arena';
+
+  const enemyArea = document.createElement('div');
+  enemyArea.className = 'enemy-area';
+  for (const enemy of state.combat.enemies) {
+    const def = getEnemy(enemy.definitionId);
+    const move = def?.moves[enemy.moveIndex % def.moves.length];
+    const firstIntent = move?.intents[0];
+    const intentType = firstIntent?.type ?? 'unknown';
+    const intentValue = firstIntent?.value !== undefined ? ` ${firstIntent.value}` : '';
+    const intentText = `${firstIntent?.label ?? INTENT_LABEL[intentType] ?? '未知'}${intentValue}`;
+    const maxHp = def?.maxHp ?? enemy.hp;
+    const hpPct = maxHp > 0 ? Math.max(0, Math.min(100, (enemy.hp / maxHp) * 100)) : 0;
+
+    const el = document.createElement('div');
+    el.className = `enemy-card enemy-tier-${def?.tier ?? 'normal'}`;
+    el.dataset.enemyId = enemy.instanceId;
+    el.innerHTML = `
+      <div class="enemy-intent-token intent-${intentType}">
+        <strong>${INTENT_ICON[intentType] ?? '?'}</strong>
+        <span>${intentText}</span>
+      </div>
+      <div class="enemy-portrait" aria-hidden="true">
+        <span>${(def?.name ?? enemy.definitionId).slice(0, 1)}</span>
+      </div>
+      <div class="enemy-name-row">
+        <strong>${def?.name ?? enemy.definitionId}</strong>
+        <span>${TIER_LABEL[def?.tier ?? 'normal'] ?? '敌人'}</span>
+      </div>
+      <div class="enemy-hpbar" aria-label="敌人生命">
+        <span style="width: ${hpPct}%"></span>
+      </div>
+      <div class="enemy-stats">
+        <span>HP ${enemy.hp}/${maxHp}</span>
+        <span class="${enemy.block ? '' : 'is-empty'}">格挡 ${enemy.block}</span>
+      </div>
+    `;
+    enemyArea.appendChild(el);
+  }
+
+  const playerArea = document.createElement('div');
+  playerArea.className = 'player-combat-info player-drop-target';
+  playerArea.dataset.dropTarget = 'player';
+  const hpPct = Math.max(0, Math.min(100, (state.hp / state.maxHp) * 100));
+  playerArea.innerHTML = `
+    <div class="player-avatar">
+      <span>你</span>
+    </div>
+    <div class="player-panel-body">
+      <div class="player-name-row">
+        <strong>探索者</strong>
+        <span>可将技能/能力牌拖到这里</span>
+      </div>
+      <div class="player-hpbar"><span style="width: ${hpPct}%"></span></div>
+      <div class="player-stats">
+        <span>HP ${state.hp}/${state.maxHp}</span>
+        <span>格挡 ${state.combat.playerBlock}</span>
+        <span>能量 ${state.energy}/${state.maxEnergy}</span>
+      </div>
+    </div>
+  `;
+
+  arena.appendChild(enemyArea);
+  arena.appendChild(playerArea);
+  screen.appendChild(arena);
+
+  const playHint = document.createElement('div');
+  playHint.className = 'play-hint';
+  playHint.textContent = '拖动攻击牌到敌人，拖动技能/能力牌到自己。敌人头顶会显示本回合意图。';
+  screen.appendChild(playHint);
+
+  const hand = document.createElement('div');
+  hand.className = 'hand fan-hand';
+  const handCount = state.combat.hand.length;
+  const midIndex = (handCount - 1) / 2;
+  const spacing = Math.min(8.4, Math.max(4.8, 42 / Math.max(handCount, 1)));
+  const spreadAngle = Math.min(58, Math.max(20, handCount * 8));
 
   let activeDrag: DragState | null = null;
 
@@ -105,7 +179,7 @@ export function renderCombatScreen(root: HTMLElement, state: GameState): void {
 
   const clearActiveTarget = (target: HTMLElement | null): void => {
     if (target) {
-      target.classList.remove('active-target');
+      target.classList.remove('active-target', 'invalid-target');
     }
   };
 
@@ -115,33 +189,12 @@ export function renderCombatScreen(root: HTMLElement, state: GameState): void {
     dragOverlay.classList.remove('active');
     dragGhost.classList.remove('visible');
     dragArrow.style.width = '0';
+    screen.classList.remove('dragging-card');
     if (activeDrag) {
       activeDrag.wrapper.classList.remove('drag-source');
       clearActiveTarget(activeDrag.target);
     }
     activeDrag = null;
-  };
-
-  const onPointerMove = (event: PointerEvent): void => {
-    event.preventDefault();
-    if (!activeDrag) return;
-    updateDrag(event.clientX, event.clientY);
-  };
-
-  const onPointerUp = (event: PointerEvent): void => {
-    event.preventDefault();
-    if (!activeDrag) return;
-    const droppedTarget = activeDrag.target;
-    const cardInst = activeDrag.cardInst;
-    cleanupDrag();
-
-    if (!droppedTarget) return;
-
-    if (droppedTarget.dataset.enemyId) {
-      gameManager.updateState((s) => playCard(s, cardInst.instanceId, droppedTarget.dataset.enemyId!));
-    } else if (droppedTarget.dataset.dropTarget === 'player') {
-      gameManager.updateState((s) => playCard(s, cardInst.instanceId));
-    }
   };
 
   const updateDrag = (clientX: number, clientY: number): void => {
@@ -168,7 +221,33 @@ export function renderCombatScreen(root: HTMLElement, state: GameState): void {
     if (newTarget !== activeDrag.target) {
       clearActiveTarget(activeDrag.target);
       activeDrag.target = newTarget;
-      if (newTarget) newTarget.classList.add('active-target');
+    }
+    if (activeDrag.target) {
+      const valid = canDropCardOnTarget(activeDrag.cardInst, activeDrag.target);
+      activeDrag.target.classList.toggle('active-target', valid);
+      activeDrag.target.classList.toggle('invalid-target', !valid);
+    }
+  };
+
+  const onPointerMove = (event: PointerEvent): void => {
+    event.preventDefault();
+    updateDrag(event.clientX, event.clientY);
+  };
+
+  const onPointerUp = (event: PointerEvent): void => {
+    event.preventDefault();
+    if (!activeDrag) return;
+    const droppedTarget = activeDrag.target;
+    const cardInst = activeDrag.cardInst;
+    const validTarget = canDropCardOnTarget(cardInst, droppedTarget);
+    cleanupDrag();
+
+    if (!validTarget || !droppedTarget) return;
+
+    if (droppedTarget.dataset.enemyId) {
+      gameManager.updateState((s) => playCard(s, cardInst.instanceId, droppedTarget.dataset.enemyId!));
+    } else {
+      gameManager.updateState((s) => playCard(s, cardInst.instanceId));
     }
   };
 
@@ -199,6 +278,7 @@ export function renderCombatScreen(root: HTMLElement, state: GameState): void {
     dragGhost.style.height = `${cardRect.height}px`;
     dragGhost.classList.add('visible');
     dragOverlay.classList.add('active');
+    screen.classList.add('dragging-card');
     wrapper.classList.add('drag-source');
 
     activeDrag = {
@@ -221,21 +301,29 @@ export function renderCombatScreen(root: HTMLElement, state: GameState): void {
     const disabled = state.energy < getCardCost(def, cardInst.upgraded);
     const wrapper = document.createElement('div');
     wrapper.className = 'hand-card-slot';
-    const angle = handCount === 1 ? 0 : ((index - midIndex) / Math.max(handCount - 1, 1)) * spreadAngle;
+    if (disabled) wrapper.classList.add('is-disabled');
+    const normalized = index - midIndex;
+    const angle = handCount === 1 ? 0 : (normalized / Math.max(handCount - 1, 1)) * spreadAngle;
     wrapper.style.setProperty('--hand-card-angle', `${angle}deg`);
+    wrapper.style.setProperty('--hand-card-x', `${normalized * spacing}rem`);
+    wrapper.style.setProperty('--hand-card-lift', `${Math.abs(normalized) * -0.18}rem`);
+    wrapper.style.zIndex = String(index + 1);
 
     const cardEl = createCardElement({
       def,
       upgraded: cardInst.upgraded,
       variant: 'hand',
       disabled,
+      reason: getCardPlayReason(def, cardInst, state),
     });
 
     cardEl.addEventListener('pointerenter', () => {
       cardEl.classList.add('card-hovered');
+      wrapper.style.zIndex = '50';
     });
     cardEl.addEventListener('pointerleave', () => {
       cardEl.classList.remove('card-hovered');
+      wrapper.style.zIndex = String(index + 1);
     });
     cardEl.addEventListener('pointerdown', (event) => {
       startDrag(cardInst, cardEl, wrapper, disabled, event as PointerEvent);
@@ -249,8 +337,14 @@ export function renderCombatScreen(root: HTMLElement, state: GameState): void {
 
   const actions = document.createElement('div');
   actions.className = 'combat-actions';
+  actions.innerHTML = `
+    <div class="energy-orb" aria-label="当前能量">
+      <strong>${state.energy}</strong>
+      <span>/${state.maxEnergy}</span>
+    </div>
+  `;
   const endBtn = document.createElement('button');
-  endBtn.className = 'btn btn-primary';
+  endBtn.className = 'btn btn-primary btn-end-turn';
   endBtn.textContent = '结束回合';
   endBtn.addEventListener('click', () => {
     gameManager.updateState((s) => endPlayerTurn(s));

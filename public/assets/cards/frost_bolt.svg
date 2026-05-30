@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 220" role="img" aria-label="Frost bolt card art">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#d7fbff"/>
+      <stop offset="1" stop-color="#1f4d89"/>
+    </linearGradient>
+  </defs>
+  <rect width="320" height="220" fill="url(#bg)"/>
+  <path d="M47 122 223 48l-52 58 100-8-176 74 52-58z" fill="#f5ffff"/>
+  <path d="M76 68 56 40M109 52l-6-34M243 162l23 26M210 178l7 34" stroke="#bceeff" stroke-width="10" stroke-linecap="round"/>
+</svg>

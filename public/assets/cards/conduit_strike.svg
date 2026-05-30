@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 220" role="img" aria-label="Conduit strike card art">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#76e7ff"/>
+      <stop offset="1" stop-color="#54231b"/>
+    </linearGradient>
+  </defs>
+  <rect width="320" height="220" fill="url(#bg)"/>
+  <path d="M60 153c64-77 125-87 200-85" fill="none" stroke="#f7ffff" stroke-width="18" stroke-linecap="round"/>
+  <path d="M77 174 225 53" stroke="#5a1f18" stroke-width="16" stroke-linecap="round"/>
+  <path d="M212 54 242 84" stroke="#ffd07a" stroke-width="11" stroke-linecap="round"/>
+</svg>

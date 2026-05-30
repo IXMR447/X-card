@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 220" role="img" aria-label="Defend card art">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#7cc9d5"/>
+      <stop offset="1" stop-color="#183745"/>
+    </linearGradient>
+  </defs>
+  <rect width="320" height="220" fill="url(#bg)"/>
+  <path d="M160 24 245 58v60c0 47-34 75-85 91-51-16-85-44-85-91V58z" fill="#d8fbff" opacity=".88"/>
+  <path d="M160 47 219 70v45c0 31-21 52-59 66-38-14-59-35-59-66V70z" fill="#27596a"/>
+  <path d="M109 117h102" stroke="#b9edf4" stroke-width="16" stroke-linecap="round"/>
+</svg>

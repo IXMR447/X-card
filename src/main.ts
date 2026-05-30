@@ -1,3 +1,4 @@
+import '@/styles/main.css';
 import { loadGameContent } from '@/content/loader';
 import { GameApp } from '@/ui/App';
 

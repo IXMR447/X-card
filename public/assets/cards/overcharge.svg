@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 220" role="img" aria-label="Overcharge card art">
+  <defs>
+    <radialGradient id="bg" cx=".5" cy=".4" r=".75">
+      <stop offset="0" stop-color="#fdffb2"/>
+      <stop offset=".45" stop-color="#2bb8ca"/>
+      <stop offset="1" stop-color="#142b3c"/>
+    </radialGradient>
+  </defs>
+  <rect width="320" height="220" fill="url(#bg)"/>
+  <circle cx="160" cy="110" r="54" fill="none" stroke="#eaffff" stroke-width="14"/>
+  <path d="M160 34v44M160 142v44M84 110h44M192 110h44" stroke="#eaffff" stroke-width="12" stroke-linecap="round"/>
+  <path d="m159 79-27 41h31l-12 43 39-58h-31z" fill="#fff17a"/>
+</svg>

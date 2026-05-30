@@ -15,7 +15,7 @@ const MINIMAL_CARDS: CardDefinition[] = [
     cost: 1,
     description: '造成 7 点伤害。',
     effects: { damage: 7 },
-    image: 'assets/cards/strike.png',
+    image: 'assets/cards/strike.svg',
     upgrade: { description: '造成 10 点伤害。', effects: { damage: 10 } },
     _design: {
       purpose: '基础攻击牌，作为所有角色的通用输出',
@@ -32,7 +32,7 @@ const MINIMAL_CARDS: CardDefinition[] = [
     cost: 1,
     description: '获得 6 点格挡。',
     effects: { block: 6 },
-    image: 'assets/cards/defend.png',
+    image: 'assets/cards/defend.svg',
     upgrade: { description: '获得 9 点格挡。', effects: { block: 9 } },
     _design: {
       purpose: '基础防御牌，保证角色早期生存',
@@ -50,7 +50,7 @@ const MINIMAL_CARDS: CardDefinition[] = [
     description: '造成 8 点伤害。抽 1 张牌。',
     effects: { damage: 8, draw: 1 },
     characterId: 'fluxbreaker',
-    image: 'assets/cards/spark_dash.png',
+    image: 'assets/cards/spark_dash.svg',
     upgrade: { description: '造成 11 点伤害。抽 1 张牌。', effects: { damage: 11 } },
     _design: {
       purpose: '提升能量利用率并帮助快速循环卡组',
@@ -68,7 +68,7 @@ const MINIMAL_CARDS: CardDefinition[] = [
     description: '获得 6 点格挡。抽 1 张牌。',
     effects: { block: 6, draw: 1 },
     characterId: 'fluxbreaker',
-    image: 'assets/cards/battery_shield.png',
+    image: 'assets/cards/battery_shield.svg',
     upgrade: { description: '获得 9 点格挡。抽 1 张牌。', effects: { block: 9 } },
     _design: {
       purpose: '提供防御与循环，降低手牌堵塞概率',
@@ -86,7 +86,7 @@ const MINIMAL_CARDS: CardDefinition[] = [
     description: '获得 1 点额外能量。抽 1 张牌。',
     effects: { energy: 1, draw: 1 },
     characterId: 'fluxbreaker',
-    image: 'assets/cards/overcharge.png',
+    image: 'assets/cards/overcharge.svg',
     upgrade: { description: '获得 1 点额外能量。抽 2 张牌。', effects: { energy: 1, draw: 2 } },
     _design: {
       purpose: '强化节奏型角色的能量循环能力',
@@ -104,7 +104,7 @@ const MINIMAL_CARDS: CardDefinition[] = [
     description: '造成 4 点伤害。抽 1 张牌。',
     effects: { damage: 4, draw: 1 },
     characterId: 'fluxbreaker',
-    image: 'assets/cards/conduit_strike.png',
+    image: 'assets/cards/conduit_strike.svg',
     upgrade: { description: '造成 6 点伤害。抽 1 张牌。', effects: { damage: 6 } },
     _design: {
       purpose: '让零耗攻击牌成为连击与资源循环的基础',
@@ -122,7 +122,7 @@ const MINIMAL_CARDS: CardDefinition[] = [
     description: '造成 6 点伤害。',
     effects: { damage: 6 },
     characterId: 'frostseeker',
-    image: 'assets/cards/frost_bolt.png',
+    image: 'assets/cards/frost_bolt.svg',
     upgrade: { description: '造成 9 点伤害。', effects: { damage: 9 } },
     _design: {
       purpose: '提供稳定单体伤害，与控制机制搭配',
@@ -140,7 +140,7 @@ const MINIMAL_CARDS: CardDefinition[] = [
     description: '获得 7 点格挡。',
     effects: { block: 7 },
     characterId: 'frostseeker',
-    image: 'assets/cards/ice_barrier.png',
+    image: 'assets/cards/ice_barrier.svg',
     upgrade: { description: '获得 10 点格挡。', effects: { block: 10 } },
     _design: {
       purpose: '基础防御卡，为冰系角色提供稳定承受',
@@ -158,7 +158,7 @@ const MINIMAL_CARDS: CardDefinition[] = [
     description: '获得 4 点格挡。抽 1 张牌。',
     effects: { block: 4, draw: 1 },
     characterId: 'frostseeker',
-    image: 'assets/cards/chill_mine.png',
+    image: 'assets/cards/chill_mine.svg',
     upgrade: { description: '获得 6 点格挡。抽 1 张牌。', effects: { block: 6 } },
     _design: {
       purpose: '减缓敌方节奏并提高卡组流畅度',
@@ -176,7 +176,7 @@ const MINIMAL_CARDS: CardDefinition[] = [
     description: '回合开始时获得 2 点格挡。',
     effects: { custom: 'gain_block_each_turn_2' },
     characterId: 'frostseeker',
-    image: 'assets/cards/glacial_focus.png',
+    image: 'assets/cards/glacial_focus.svg',
     upgrade: { description: '回合开始时获得 3 点格挡。', effects: { custom: 'gain_block_each_turn_3' } },
     _design: {
       purpose: '提供持续资源，让控制流在近战中更稳健',
