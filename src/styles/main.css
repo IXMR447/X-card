@@ -1,0 +1,417 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+:root {
+  --bg: #0f1419;
+  --surface: #1a2332;
+  --surface-2: #243044;
+  --text: #e8edf4;
+  --muted: #8b9cb3;
+  --accent: #6b9bd1;
+  --accent-hover: #8ab4e8;
+  --danger: #e05c5c;
+  --gold: #d4a853;
+  --attack: #c45c5c;
+  --skill: #5c8fc4;
+  --power: #9b6bc4;
+  --radius: 8px;
+  --font: system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+}
+
+#app {
+  min-height: 100vh;
+}
+
+.screen {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+.panel {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 2rem;
+}
+
+.btn {
+  display: inline-block;
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btn:hover {
+  background: #2f4058;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #0f1419;
+}
+
+.btn-primary:hover {
+  background: var(--accent-hover);
+}
+
+.btn-large {
+  padding: 0.85rem 2rem;
+  font-size: 1.1rem;
+}
+
+.main-menu {
+  text-align: center;
+  padding-top: 4rem;
+}
+
+.game-title {
+  font-size: 2.5rem;
+  margin: 0 0 0.5rem;
+  letter-spacing: 0.05em;
+}
+
+.subtitle {
+  color: var(--muted);
+  margin-bottom: 2rem;
+}
+
+.hud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  background: var(--surface);
+  border-radius: var(--radius);
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+}
+
+.character-list {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+}
+
+.character-card {
+  background: var(--surface);
+  border: 2px solid var(--surface-2);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.character-card:hover {
+  border-color: var(--accent);
+}
+
+.char-title {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.map-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.map-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.floor-label {
+  width: 4rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.map-node {
+  min-width: 2.5rem;
+  padding: 0.4rem 0.6rem;
+}
+
+.map-node.current {
+  outline: 2px solid var(--accent);
+}
+
+.map-node.visited {
+  opacity: 0.5;
+}
+
+.combat-screen .enemy-area {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.enemy-unit {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 1rem;
+  min-width: 140px;
+}
+
+.enemy-intent {
+  color: var(--gold);
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+}
+
+.hand {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin: 1rem 0;
+}
+
+.card {
+  position: relative;
+  width: 140px;
+  min-height: 200px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-size: 0.8rem;
+  transition: transform 0.15s;
+}
+
+.card:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.card-art {
+  flex: 0 0 88px;
+  width: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-art-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.card-art-placeholder {
+  font-size: 2rem;
+  opacity: 0.35;
+}
+
+.card-art-missing {
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--surface-2),
+    var(--surface-2) 6px,
+    var(--bg) 6px,
+    var(--bg) 12px
+  );
+}
+
+.card-body {
+  position: relative;
+  flex: 1;
+  padding: 0.5rem 0.45rem 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.card-compact {
+  width: 72px;
+  min-height: 100px;
+}
+
+.card-compact .card-art {
+  flex-basis: 52px;
+}
+
+.card-compact .card-body {
+  padding: 0.35rem;
+}
+
+.card-compact .card-desc {
+  display: none;
+}
+
+.card-compact .card-name {
+  font-size: 0.7rem;
+  margin-top: 0;
+}
+
+.card-reward {
+  width: 160px;
+  min-height: 220px;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+}
+
+.card-attack {
+  border-top: 3px solid var(--attack);
+}
+
+.card-skill {
+  border-top: 3px solid var(--skill);
+}
+
+.card-power {
+  border-top: 3px solid var(--power);
+}
+
+.card-cost {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: var(--bg);
+  border-radius: 50%;
+  width: 1.5rem;
+  height: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  z-index: 2;
+  box-shadow: 0 0 0 2px var(--surface-2);
+}
+
+.card-compact .card-cost {
+  top: 4px;
+  right: 4px;
+  width: 1.25rem;
+  height: 1.25rem;
+  font-size: 0.75rem;
+}
+
+.card-name {
+  font-weight: 600;
+  margin-top: 0;
+  line-height: 1.2;
+}
+
+.card-desc {
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.reward-cards {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin: 1rem 0;
+}
+
+.card-reward {
+  width: 160px;
+  min-height: 220px;
+}
+
+.char-portrait {
+  width: 100%;
+  max-height: 140px;
+  object-fit: cover;
+  border-radius: calc(var(--radius) - 2px);
+  margin-bottom: 0.75rem;
+}
+
+.shop-card-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.shop-card-thumb {
+  flex-shrink: 0;
+  pointer-events: none;
+}
+
+.shop-card-label {
+  flex: 1;
+  text-align: left;
+}
+
+.campfire-upgrade-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.campfire-card-preview {
+  flex-shrink: 0;
+  pointer-events: none;
+}
+
+/* 自定义卡框示例：卡牌 art.frame 设为 'gold' 时生效 */
+.card-frame-gold {
+  box-shadow: inset 0 0 0 2px var(--gold);
+}
+
+.shop-section {
+  margin-bottom: 1.5rem;
+}
+
+.shop-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  margin-bottom: 0.5rem;
+}
+
+.event-desc {
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.event-choice {
+  display: block;
+  width: 100%;
+  margin-bottom: 0.5rem;
+  text-align: left;
+}
+
+.combat-actions {
+  margin-top: 1rem;
+}
+
+.game-over-screen {
+  text-align: center;
+}
