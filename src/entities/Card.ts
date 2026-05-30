@@ -31,6 +31,7 @@ export interface CardArt {
 /** 卡牌效果 — 由你在 content 中定义具体数值，引擎按 type 执行 */
 export interface CardEffect {
   damage?: number;
+  hits?: number;
   block?: number;
   draw?: number;
   energy?: number;

@@ -316,6 +316,12 @@ body::before {
   border-color: rgba(255, 112, 74, 0.96);
 }
 
+.enemy-card.enemy-acting {
+  animation: enemyActing 0.46s cubic-bezier(0.2, 1.2, 0.25, 1);
+  border-color: rgba(255, 196, 91, 0.86);
+  filter: brightness(1.18);
+}
+
 .enemy-card:hover,
 .enemy-card.active-target {
   transform: translateY(-0.35rem);
@@ -731,6 +737,19 @@ body::before {
   }
 }
 
+@keyframes enemyActing {
+  0% {
+    transform: translateY(0) scale(1);
+  }
+  42% {
+    transform: translateY(-0.62rem) scale(1.045);
+    box-shadow: 0 0 0 4px rgba(255, 196, 91, 0.2), 0 0 32px rgba(255, 196, 91, 0.32);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+  }
+}
+
 @keyframes guardPulse {
   0% {
     transform: scale(1);
@@ -1028,6 +1047,11 @@ button.card:disabled,
 .card-effect-energy {
   background: rgba(32, 112, 129, 0.82);
   color: #eaffff;
+}
+
+.card-effect-status {
+  background: rgba(105, 77, 158, 0.82);
+  color: #fbf1ff;
 }
 
 .card-rarity-uncommon {
@@ -1828,6 +1852,62 @@ button.card:disabled,
   animation-delay: 0.44s;
 }
 
+.status-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.32rem;
+  min-height: 1.35rem;
+}
+
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.26rem;
+  min-height: 1.35rem;
+  padding: 0.16rem 0.42rem;
+  border: 1px solid rgba(104, 232, 255, 0.22);
+  border-radius: 999px;
+  background: rgba(7, 18, 26, 0.78);
+  color: #e9fbff;
+  font-size: 0.72rem;
+  font-weight: 900;
+  box-shadow: inset 0 0 14px rgba(104, 232, 255, 0.06), 0 0 12px rgba(104, 232, 255, 0.08);
+}
+
+.status-chip strong {
+  color: inherit;
+  font-size: 0.66rem;
+}
+
+.status-vulnerable {
+  border-color: rgba(255, 123, 83, 0.42);
+  color: #ffd0bf;
+  box-shadow: inset 0 0 14px rgba(255, 123, 83, 0.08), 0 0 14px rgba(255, 95, 66, 0.14);
+}
+
+.status-weak,
+.status-frail {
+  border-color: rgba(180, 150, 255, 0.42);
+  color: #eadfff;
+}
+
+.status-strength {
+  border-color: rgba(255, 196, 91, 0.5);
+  color: #ffe0a1;
+}
+
+.status-dexterity,
+.status-auto_block {
+  border-color: rgba(104, 232, 255, 0.52);
+  color: #c9f8ff;
+}
+
+.status-burn {
+  border-color: rgba(255, 97, 60, 0.58);
+  color: #ffc3a8;
+  animation: burnFlicker 1.4s ease-in-out infinite;
+}
+
 .enemy-hpbar,
 .player-hpbar {
   height: 0.82rem;
@@ -2026,6 +2106,18 @@ button.card:disabled,
   box-shadow: 0 0 34px rgba(103, 222, 235, 0.68), inset 0 0 24px rgba(225, 255, 255, 0.3);
 }
 
+.combat-effect-impact {
+  width: 10rem;
+  height: 10rem;
+  border-radius: 50%;
+  border: 0.28rem solid rgba(255, 112, 74, 0.82);
+  background:
+    repeating-radial-gradient(circle, rgba(255, 112, 74, 0.16) 0 3px, transparent 3px 13px),
+    radial-gradient(circle, rgba(255, 221, 158, 0.26), rgba(255, 112, 74, 0.12) 52%, transparent 68%);
+  box-shadow: 0 0 36px rgba(255, 86, 45, 0.62), inset 0 0 24px rgba(255, 245, 214, 0.22);
+  animation: impactPop 0.58s cubic-bezier(0.18, 1.35, 0.32, 1) forwards;
+}
+
 .screen-impact::after {
   background:
     linear-gradient(90deg, transparent, rgba(255, 91, 50, 0.18), transparent),
@@ -2036,6 +2128,18 @@ button.card:disabled,
   background:
     linear-gradient(90deg, transparent, rgba(104, 232, 255, 0.16), transparent),
     radial-gradient(circle at 22% 54%, rgba(122, 239, 248, 0.3), transparent 30%);
+}
+
+.screen-enemy-turn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, transparent, rgba(255, 196, 91, 0.16), transparent),
+    radial-gradient(circle at 72% 36%, rgba(255, 120, 72, 0.28), transparent 34%);
+  animation: screenFlash 0.46s ease-out;
 }
 
 .energy-orb {
@@ -2271,6 +2375,30 @@ button.card:disabled,
   }
 }
 
+@keyframes impactPop {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.28) rotate(0deg);
+  }
+  35% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.35) rotate(18deg);
+  }
+}
+
+@keyframes burnFlicker {
+  0%,
+  100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.28);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .combat-screen::before,
   .combat-system-readout span::after,
@@ -2293,7 +2421,10 @@ button.card:disabled,
   .energy-orb,
   .drag-overlay.active .drag-arrow,
   .drag-ghost.visible,
-  .combat-effect-spark {
+  .combat-effect-spark,
+  .enemy-card.enemy-acting,
+  .status-burn,
+  .combat-effect-impact {
     animation: none;
   }
 }

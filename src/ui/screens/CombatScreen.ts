@@ -40,8 +40,33 @@ const INTENT_ICON: Record<string, string> = {
   unknown: '?',
 };
 
+const STATUS_LABEL: Record<string, string> = {
+  vulnerable: '易伤',
+  weak: '虚弱',
+  frail: '脆弱',
+  strength: '力量',
+  dexterity: '敏捷',
+  burn: '灼烧',
+  auto_block: '护盾矩阵',
+};
+
+function renderStatusChips(statuses: Map<string, number>): string {
+  const chips = [...statuses.entries()]
+    .filter(([, value]) => value > 0)
+    .map(
+      ([id, value]) =>
+        `<span class="status-chip status-${id}"><strong>${STATUS_LABEL[id] ?? id}</strong>${value}</span>`,
+    );
+  return chips.length ? `<div class="status-row">${chips.join('')}</div>` : '';
+}
+
 function cardNeedsEnemyTarget(def: CardDefinition, upgraded: boolean): boolean {
-  return Boolean(getCardEffects(def, upgraded).damage);
+  const effects = getCardEffects(def, upgraded);
+  return Boolean(
+    effects.damage ||
+      effects.applyStatus?.target === 'enemy' ||
+      effects.applyStatus?.target === 'all_enemies',
+  );
 }
 
 function canDropCardOnTarget(cardInst: CardInstance, target: HTMLElement | null): boolean {
@@ -152,7 +177,10 @@ export function renderCombatScreen(root: HTMLElement, state: GameState): void {
     const move = def?.moves[enemy.moveIndex % def.moves.length];
     const firstIntent = move?.intents[0];
     const intentType = firstIntent?.type ?? 'unknown';
-    const intentValue = firstIntent?.value !== undefined ? ` ${firstIntent.value}` : '';
+    const intentValue =
+      firstIntent?.value !== undefined
+        ? ` ${firstIntent.value}${firstIntent.hits ? `x${firstIntent.hits}` : ''}`
+        : '';
     const intentText = `${firstIntent?.label ?? INTENT_LABEL[intentType] ?? '未知'}${intentValue}`;
     const maxHp = def?.maxHp ?? enemy.hp;
     const hpPct = maxHp > 0 ? Math.max(0, Math.min(100, (enemy.hp / maxHp) * 100)) : 0;
@@ -183,6 +211,7 @@ export function renderCombatScreen(root: HTMLElement, state: GameState): void {
         <span>HP ${enemy.hp}/${maxHp}</span>
         <span class="${enemy.block ? '' : 'is-empty'}">格挡 ${enemy.block}</span>
       </div>
+      ${renderStatusChips(enemy.statuses)}
       <div class="enemy-signal-row" aria-hidden="true">
         <span></span><span></span><span></span>
       </div>
@@ -215,6 +244,7 @@ export function renderCombatScreen(root: HTMLElement, state: GameState): void {
         <span>格挡 ${state.combat.playerBlock}</span>
         <span>能量 ${state.energy}/${state.maxEnergy}</span>
       </div>
+      ${renderStatusChips(state.combat.playerStatuses)}
     </div>
   `;
 
@@ -417,8 +447,27 @@ export function renderCombatScreen(root: HTMLElement, state: GameState): void {
   const endBtn = document.createElement('button');
   endBtn.className = 'btn btn-primary btn-end-turn';
   endBtn.textContent = '结束回合';
+  let endingTurn = false;
   endBtn.addEventListener('click', () => {
-    gameManager.updateState((s) => endPlayerTurn(s));
+    if (endingTurn) return;
+    endingTurn = true;
+    endBtn.disabled = true;
+    const hasIncomingAttack = state.combat?.enemies.some((enemy) => {
+      const def = getEnemy(enemy.definitionId);
+      const move = def?.moves[enemy.moveIndex % def.moves.length];
+      return Boolean(move?.actions?.damage);
+    });
+    screen.classList.add('screen-enemy-turn');
+    enemyArea.querySelectorAll('.enemy-card').forEach((enemyCard) => {
+      enemyCard.classList.add('enemy-acting');
+    });
+    if (hasIncomingAttack) {
+      playerArea.classList.add('impact-target');
+      placeEffect(screen, 'combat-effect-impact', playerArea);
+    }
+    window.setTimeout(() => {
+      gameManager.updateState((s) => endPlayerTurn(s));
+    }, 460);
   });
   actions.appendChild(endBtn);
   screen.appendChild(actions);

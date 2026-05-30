@@ -1,4 +1,4 @@
-import type { CombatState, CombatType, GameState, RewardState } from '@/entities';
+import type { CardEffect, CombatState, CombatType, GameState, RewardState } from '@/entities';
 import { GAME, REWARD_GOLD } from '@/core/constants';
 import { eventBus, GameEvents } from '@/core/EventBus';
 import {
@@ -16,6 +16,64 @@ import {
 import { getCardRewardPool } from '@/core/registries/CardRegistry';
 import { pickRandomPotion } from '@/core/registries/PotionRegistry';
 import { getBossRelicPool, getRelicRewardPool } from '@/core/registries/RelicRegistry';
+
+const TEMPORARY_STATUSES = new Set(['vulnerable', 'weak', 'frail']);
+const PLAYER_TURN_START_DECAY = new Set(['burn']);
+
+function getStatusValue(statuses: Map<string, number> | undefined, id: string): number {
+  return statuses?.get(id) ?? 0;
+}
+
+function setStatus(statuses: Map<string, number>, id: string, stacks: number): Map<string, number> {
+  const next = new Map(statuses);
+  if (stacks <= 0) {
+    next.delete(id);
+  } else {
+    next.set(id, stacks);
+  }
+  return next;
+}
+
+function addStatus(statuses: Map<string, number>, id: string, stacks: number): Map<string, number> {
+  return setStatus(statuses, id, getStatusValue(statuses, id) + stacks);
+}
+
+function decayStatuses(
+  statuses: Map<string, number>,
+  ids: Set<string> = TEMPORARY_STATUSES,
+): Map<string, number> {
+  let next = new Map(statuses);
+  for (const id of ids) {
+    const stacks = getStatusValue(next, id);
+    if (stacks > 0) {
+      next = setStatus(next, id, stacks - 1);
+    }
+  }
+  return next;
+}
+
+function calculateDamage(
+  baseDamage: number,
+  attackerStatuses: Map<string, number> | undefined,
+  defenderStatuses: Map<string, number> | undefined,
+): number {
+  let damage = baseDamage + getStatusValue(attackerStatuses, 'strength');
+  if (getStatusValue(attackerStatuses, 'weak') > 0) {
+    damage = Math.floor(damage * 0.75);
+  }
+  if (getStatusValue(defenderStatuses, 'vulnerable') > 0) {
+    damage = Math.floor(damage * 1.5);
+  }
+  return Math.max(0, damage);
+}
+
+function calculateBlock(baseBlock: number, statuses: Map<string, number> | undefined): number {
+  let block = baseBlock + getStatusValue(statuses, 'dexterity');
+  if (getStatusValue(statuses, 'frail') > 0) {
+    block = Math.floor(block * 0.75);
+  }
+  return Math.max(0, block);
+}
 
 export function startCombat(state: GameState, type: CombatType, enemyIds: string[]): GameState {
   const enemies = enemyIds.map((id) => {
@@ -54,7 +112,27 @@ export function startCombat(state: GameState, type: CombatType, enemyIds: string
 function startPlayerTurn(state: GameState): GameState {
   if (!state.combat) return state;
   eventBus.emit(GameEvents.TURN_START, { turn: state.combat.turn });
-  return { ...state, energy: state.maxEnergy, combat: { ...state.combat, playerBlock: 0, cardsPlayedThisTurn: 0 } };
+  let hp = state.hp;
+  let statuses = new Map(state.combat.playerStatuses);
+  const burn = getStatusValue(statuses, 'burn');
+  if (burn > 0) {
+    hp = Math.max(0, hp - burn);
+    eventBus.emit(GameEvents.DAMAGE_TAKEN, { damage: burn });
+  }
+  statuses = decayStatuses(statuses, PLAYER_TURN_START_DECAY);
+  const playerBlock = getStatusValue(statuses, 'auto_block');
+
+  return {
+    ...state,
+    hp,
+    energy: state.maxEnergy,
+    combat: {
+      ...state.combat,
+      playerBlock,
+      playerStatuses: statuses,
+      cardsPlayedThisTurn: 0,
+    },
+  };
 }
 
 function drawCards(state: GameState, count: number): GameState {
@@ -99,23 +177,7 @@ export function playCard(state: GameState, cardInstanceId: string, targetEnemyId
   const effects = getCardEffects(cardDef, cardInst.upgraded);
 
   // 应用效果
-  if (effects.damage && targetEnemyId) {
-    next = dealDamageToEnemy(next, targetEnemyId, effects.damage);
-  }
-  if (effects.block) {
-    next = {
-      ...next,
-      combat: next.combat
-        ? { ...next.combat, playerBlock: next.combat.playerBlock + effects.block }
-        : null,
-    };
-  }
-  if (effects.draw) {
-    next = drawCards(next, effects.draw);
-  }
-  if (effects.energy) {
-    next = { ...next, energy: next.energy + effects.energy };
-  }
+  next = applyCardEffects(next, effects, targetEnemyId);
 
   // 移动卡牌
   const played = cardInst;
@@ -154,11 +216,92 @@ export function playCard(state: GameState, cardInstanceId: string, targetEnemyId
   return next;
 }
 
+function applyCardEffects(state: GameState, effects: CardEffect, targetEnemyId?: string): GameState {
+  if (!state.combat) return state;
+  let next = state;
+
+  if (effects.damage && targetEnemyId) {
+    const hits = effects.hits ?? 1;
+    for (let i = 0; i < hits; i += 1) {
+      next = dealDamageToEnemy(next, targetEnemyId, effects.damage);
+    }
+  }
+
+  if (effects.block) {
+    if (!next.combat) return next;
+    const block = calculateBlock(effects.block, next.combat.playerStatuses);
+    next = {
+      ...next,
+      combat: { ...next.combat, playerBlock: next.combat.playerBlock + block },
+    };
+  }
+
+  if (effects.applyStatus) {
+    next = applyCardStatus(next, effects.applyStatus, targetEnemyId);
+  }
+
+  if (effects.custom) {
+    next = applyCustomCardEffect(next, effects.custom);
+  }
+
+  if (effects.draw) {
+    next = drawCards(next, effects.draw);
+  }
+
+  if (effects.energy) {
+    next = { ...next, energy: next.energy + effects.energy };
+  }
+
+  return next;
+}
+
+function applyCardStatus(
+  state: GameState,
+  status: NonNullable<CardEffect['applyStatus']>,
+  targetEnemyId?: string,
+): GameState {
+  if (!state.combat) return state;
+  if (status.target === 'self') {
+    return {
+      ...state,
+      combat: {
+        ...state.combat,
+        playerStatuses: addStatus(state.combat.playerStatuses, status.id, status.stacks),
+      },
+    };
+  }
+
+  const enemies = state.combat.enemies.map((enemy) => {
+    const shouldApply =
+      status.target === 'all_enemies' || (status.target === 'enemy' && enemy.instanceId === targetEnemyId);
+    return shouldApply
+      ? { ...enemy, statuses: addStatus(enemy.statuses, status.id, status.stacks) }
+      : enemy;
+  });
+  return { ...state, combat: { ...state.combat, enemies } };
+}
+
+function applyCustomCardEffect(state: GameState, custom: string): GameState {
+  if (!state.combat) return state;
+  const autoBlockMatch = custom.match(/^gain_block_each_turn_(\d+)$/);
+  if (autoBlockMatch) {
+    const amount = Number(autoBlockMatch[1]);
+    return {
+      ...state,
+      combat: {
+        ...state.combat,
+        playerStatuses: addStatus(state.combat.playerStatuses, 'auto_block', amount),
+      },
+    };
+  }
+  return state;
+}
+
 function dealDamageToEnemy(state: GameState, enemyId: string, damage: number): GameState {
   if (!state.combat) return state;
   const enemies = state.combat.enemies.map((e) => {
     if (e.instanceId !== enemyId) return e;
-    let remaining = damage;
+    let remaining = calculateDamage(damage, state.combat?.playerStatuses, e.statuses);
     let block = e.block;
     if (block > 0) {
       const blocked = Math.min(block, remaining);
@@ -190,15 +333,17 @@ export function endPlayerTurn(state: GameState): GameState {
   if (!state.combat) return state;
 
   // 弃掉手牌
+  const discardedHand = state.combat.hand;
   let next: GameState = {
     ...state,
     combat: {
       ...state.combat,
       discardPile: [...state.combat.discardPile, ...state.combat.hand],
       hand: [],
+      playerStatuses: decayStatuses(state.combat.playerStatuses),
     },
   };
-  next.combat!.hand.forEach((c) => eventBus.emit(GameEvents.CARD_DISCARDED, { card: c }));
+  discardedHand.forEach((c) => eventBus.emit(GameEvents.CARD_DISCARDED, { card: c }));
 
   // 敌人行动
   next = executeEnemyTurn(next);
@@ -215,6 +360,9 @@ export function endPlayerTurn(state: GameState): GameState {
   const combat = { ...next.combat!, turn: next.combat!.turn + 1 };
   next = { ...next, combat, energy: next.maxEnergy };
   next = startPlayerTurn(next);
+  if (next.hp <= 0) {
+    return { ...next, phase: 'game_over', combat: null };
+  }
   return drawCards(next, GAME.DRAW_PER_TURN);
 }
 
@@ -223,27 +371,50 @@ function executeEnemyTurn(state: GameState): GameState {
   let next = state;
 
   for (const enemy of state.combat.enemies) {
+    const currentEnemy = next.combat?.enemies.find((e) => e.instanceId === enemy.instanceId);
+    if (!currentEnemy || currentEnemy.hp <= 0) continue;
     const def = getEnemy(enemy.definitionId);
     if (!def) continue;
-    const move = def.moves[enemy.moveIndex % def.moves.length];
+    const move = def.moves[currentEnemy.moveIndex % def.moves.length];
     const actions = move.actions;
 
     if (actions?.block) {
-      next = updateEnemy(next, enemy.instanceId, { block: enemy.block + actions.block });
+      next = updateEnemy(next, currentEnemy.instanceId, {
+        block: currentEnemy.block + calculateBlock(actions.block, currentEnemy.statuses),
+      });
     }
     if (actions?.damage) {
-      next = dealDamageToPlayer(next, actions.damage);
+      const hits = actions.hits ?? 1;
+      for (let i = 0; i < hits; i += 1) {
+        const actingEnemy = next.combat?.enemies.find((e) => e.instanceId === currentEnemy.instanceId);
+        next = dealDamageToPlayer(next, actions.damage, actingEnemy?.statuses);
+      }
     }
     if (actions?.applyStatus) {
       const { id, stacks } = actions.applyStatus;
-      const statuses = new Map(next.combat!.playerStatuses);
-      statuses.set(id, (statuses.get(id) ?? 0) + stacks);
-      next = { ...next, combat: { ...next.combat!, playerStatuses: statuses } };
+      if (actions.applyStatus.target === 'self') {
+        const actingEnemy = next.combat?.enemies.find((e) => e.instanceId === currentEnemy.instanceId);
+        if (actingEnemy) {
+          next = updateEnemy(next, currentEnemy.instanceId, {
+            statuses: addStatus(actingEnemy.statuses, id, stacks),
+          });
+        }
+      } else {
+        next = {
+          ...next,
+          combat: {
+            ...next.combat!,
+            playerStatuses: addStatus(next.combat!.playerStatuses, id, stacks),
+          },
+        };
+      }
     }
 
+    const latestEnemy = next.combat?.enemies.find((e) => e.instanceId === currentEnemy.instanceId);
     next = updateEnemy(next, enemy.instanceId, {
-      moveIndex: enemy.moveIndex + 1,
-      block: actions?.damage ? enemy.block : undefined,
+      moveIndex: (latestEnemy?.moveIndex ?? currentEnemy.moveIndex) + 1,
+      block: actions?.damage ? 0 : latestEnemy?.block,
+      statuses: latestEnemy ? decayStatuses(latestEnemy.statuses) : undefined,
     });
   }
 
@@ -253,17 +424,24 @@ function executeEnemyTurn(state: GameState): GameState {
 function updateEnemy(
   state: GameState,
   enemyId: string,
-  patch: Partial<{ block: number; moveIndex: number }>
+  patch: Partial<{ block: number; moveIndex: number; statuses: Map<string, number> }>
 ): GameState {
   if (!state.combat) return state;
+  const cleanPatch = Object.fromEntries(
+    Object.entries(patch).filter(([, value]) => value !== undefined),
+  );
   const enemies = state.combat.enemies.map((e) =>
-    e.instanceId === enemyId ? { ...e, ...patch } : e
+    e.instanceId === enemyId ? { ...e, ...cleanPatch } : e
   );
   return { ...state, combat: { ...state.combat, enemies } };
 }
 
-function dealDamageToPlayer(state: GameState, damage: number): GameState {
-  let remaining = damage;
+function dealDamageToPlayer(
+  state: GameState,
+  damage: number,
+  attackerStatuses?: Map<string, number>,
+): GameState {
+  let remaining = calculateDamage(damage, attackerStatuses, state.combat?.playerStatuses);
   let block = state.combat?.playerBlock ?? 0;
   if (block > 0) {
     const blocked = Math.min(block, remaining);

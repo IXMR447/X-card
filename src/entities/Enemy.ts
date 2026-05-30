@@ -10,6 +10,7 @@ export interface EnemyIntent {
   type: IntentType;
   label: string;
   value?: number;
+  hits?: number;
   statusId?: string;
   statusStacks?: number;
 }
@@ -18,9 +19,10 @@ export interface EnemyMove {
   intents: EnemyIntent[];
   actions?: {
     damage?: number;
+    hits?: number;
     block?: number;
     summonEnemyId?: string;
-    applyStatus?: { id: string; stacks: number; target: 'player' };
+    applyStatus?: { id: string; stacks: number; target: 'player' | 'self' };
   };
 }
 
