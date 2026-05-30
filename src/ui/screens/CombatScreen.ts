@@ -16,11 +16,20 @@ export function renderCombatScreen(root: HTMLElement, state: GameState): void {
     <div class="screen-header">
       <div>
         <h2>战斗中</h2>
-        <p class="screen-subtitle">选择卡牌或结束回合</p>
+        <p class="screen-subtitle">选择卡牌，观察敌人意图并结束回合</p>
       </div>
     </div>
   `;
   screen.appendChild(renderHud(state));
+
+  const battleSummary = document.createElement('div');
+  battleSummary.className = 'battle-summary panel';
+  battleSummary.innerHTML = `
+    <p><strong>敌人数量：</strong>${state.combat.enemies.length}</p>
+    <p><strong>当前格挡：</strong>${state.combat.playerBlock}</p>
+    <p><strong>能量剩余：</strong>${state.energy}/${state.maxEnergy}</p>
+  `;
+  screen.appendChild(battleSummary);
 
   const intents = getEnemyIntents(state);
 

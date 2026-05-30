@@ -16,6 +16,8 @@ export function renderMainMenu(root: HTMLElement): void {
           <li>卡组构筑：攻击、技能、能力</li>
           <li>地图探索：普通战、精英、商店、篝火、事件</li>
         </ul>
+      </div>
+      <div class="main-menu-actions">
         <button class="btn btn-primary btn-large" id="btn-start">开始冒险</button>
       </div>
     </div>

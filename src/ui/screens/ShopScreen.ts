@@ -15,15 +15,21 @@ export function renderShopScreen(
 ): void {
   const screen = document.createElement('div');
   screen.className = 'screen shop-screen';
+  screen.innerHTML = `
+    <div class="screen-header">
+      <div>
+        <h2>商店</h2>
+        <p class="screen-subtitle">购买卡牌、药水和遗物，补强你的牌组</p>
+      </div>
+    </div>
+  `;
   screen.appendChild(renderHud(state));
 
   if (!inventory) {
-    screen.insertAdjacentHTML('beforeend', '<p>商店加载中...</p>');
+    screen.insertAdjacentHTML('beforeend', '<div class="panel"><p>商店加载中...</p></div>');
     root.appendChild(screen);
     return;
   }
-
-  screen.insertAdjacentHTML('beforeend', '<h2>商店</h2>');
 
   const addSection = (
     title: string,

@@ -32,6 +32,11 @@ export function renderMapScreen(root: HTMLElement, state: GameState): void {
       <p>层级：${currentNode?.floor ?? '-'} · 类型：${currentNode?.type ?? '-'}</p>
       <p>下一步可选：${available.length} 个节点</p>
     </div>
+    <div class="map-legend panel">
+      <div><span class="map-legend-marker current"></span> 当前节点</div>
+      <div><span class="map-legend-marker available"></span> 可选节点</div>
+      <div><span class="map-legend-marker visited"></span> 已访问</div>
+    </div>
   `;
   screen.appendChild(infoPanel);
 

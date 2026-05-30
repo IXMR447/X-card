@@ -30,8 +30,8 @@ export function renderRewardScreen(root: HTMLElement, state: GameState): void {
   `);
 
   const cardList = document.createElement('div');
-  cardList.className = 'reward-cards';
-  cardList.innerHTML = '<h3>选择一张卡牌（或跳过）</h3>';
+  cardList.className = 'reward-cards panel';
+  cardList.innerHTML = '<h3>选择一张卡牌</h3>';
 
   for (const cardId of reward.cardChoices) {
     const def = getCard(cardId);
@@ -46,14 +46,17 @@ export function renderRewardScreen(root: HTMLElement, state: GameState): void {
     cardList.appendChild(btn);
   }
 
+  screen.appendChild(cardList);
+
+  const actionPanel = document.createElement('div');
+  actionPanel.className = 'reward-actions';
   const skipBtn = document.createElement('button');
   skipBtn.className = 'btn btn-secondary';
   skipBtn.textContent = '跳过卡牌';
   skipBtn.addEventListener('click', () => {
     gameManager.updateState((s) => skipCardReward(s));
   });
-  cardList.appendChild(skipBtn);
-
-  screen.appendChild(cardList);
+  actionPanel.appendChild(skipBtn);
+  screen.appendChild(actionPanel);
   root.appendChild(screen);
 }

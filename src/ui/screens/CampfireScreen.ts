@@ -38,6 +38,7 @@ export function renderCampfireScreen(root: HTMLElement, state: GameState): void 
   const upgradeable = getUpgradeableCards(state);
   if (upgradeable.length > 0) {
     const upgradeSection = document.createElement('div');
+    upgradeSection.className = 'campfire-upgrade-grid';
     upgradeSection.innerHTML = '<h3>升级卡牌</h3>';
     for (const instanceId of upgradeable) {
       const inst = state.deck.find((c) => c.instanceId === instanceId);
@@ -49,7 +50,7 @@ export function renderCampfireScreen(root: HTMLElement, state: GameState): void 
       preview.classList.add('campfire-card-preview');
       wrap.appendChild(preview);
       const btn = document.createElement('button');
-      btn.className = 'btn';
+      btn.className = 'btn btn-primary';
       btn.textContent = `升级 → ${def.name}+`;
       btn.addEventListener('click', () => {
         gameManager.updateState((s) => upgradeCardAtCampfire(s, instanceId));

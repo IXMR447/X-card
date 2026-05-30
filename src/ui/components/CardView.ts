@@ -75,7 +75,10 @@ export function createCardElement(options: CardViewOptions): HTMLElement {
   const bodyEl = document.createElement('div');
   bodyEl.className = 'card-body';
   bodyEl.innerHTML = `
-    <span class="card-name">${def.name}${upgraded ? '+' : ''}</span>
+    <div class="card-header">
+      <span class="card-name">${def.name}${upgraded ? '+' : ''}</span>
+      <span class="card-type">${def.type.toUpperCase()}</span>
+    </div>
     <span class="card-desc">${desc}</span>
   `;
 

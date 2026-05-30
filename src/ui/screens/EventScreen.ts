@@ -30,12 +30,12 @@ export function renderEventScreen(root: HTMLElement, state: GameState): void {
     return;
   }
 
-  screen.innerHTML += `
+  screen.insertAdjacentHTML('beforeend', `
     <div class="panel event-panel">
       <h3>${event.title}</h3>
       <p class="event-desc">${event.description}</p>
     </div>
-  `;
+  `);
 
   for (const choice of event.choices) {
     const btn = document.createElement('button');
