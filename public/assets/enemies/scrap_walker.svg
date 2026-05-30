@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 220" role="img" aria-label="Scrap walker">
+  <defs>
+    <linearGradient id="metal" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#9aa3a1"/>
+      <stop offset="1" stop-color="#3c4747"/>
+    </linearGradient>
+  </defs>
+  <ellipse cx="130" cy="195" rx="78" ry="15" fill="#000" opacity=".28"/>
+  <path d="M82 102 56 161M178 102l27 59" stroke="#2b2b28" stroke-width="18" stroke-linecap="round"/>
+  <path d="M73 164h-28M187 164h28" stroke="#576064" stroke-width="14" stroke-linecap="round"/>
+  <rect x="58" y="46" width="144" height="86" rx="18" fill="url(#metal)" stroke="#242827" stroke-width="8"/>
+  <path d="M78 44 98 20M179 44l18-24" stroke="#c0c8c6" stroke-width="8" stroke-linecap="round"/>
+  <circle cx="103" cy="87" r="12" fill="#f35b45"/>
+  <circle cx="158" cy="87" r="12" fill="#f35b45"/>
+  <path d="M94 122h72" stroke="#222" stroke-width="10" stroke-linecap="round"/>
+</svg>

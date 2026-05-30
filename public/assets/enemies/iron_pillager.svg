@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 220" role="img" aria-label="Iron pillager">
+  <defs>
+    <linearGradient id="armor" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#d4b081"/>
+      <stop offset=".55" stop-color="#7d4c34"/>
+      <stop offset="1" stop-color="#2d1d19"/>
+    </linearGradient>
+  </defs>
+  <ellipse cx="130" cy="197" rx="82" ry="14" fill="#000" opacity=".3"/>
+  <path d="M72 82 36 138M188 82l36 56" stroke="#4d2c22" stroke-width="19" stroke-linecap="round"/>
+  <path d="M50 139h58M152 139h58" stroke="#d4b081" stroke-width="14" stroke-linecap="round"/>
+  <path d="M73 59h114l20 52-33 79H86l-33-79z" fill="url(#armor)" stroke="#211512" stroke-width="8"/>
+  <path d="M88 55 106 24h48l18 31" fill="#4c3026"/>
+  <path d="M100 91h60" stroke="#261714" stroke-width="12" stroke-linecap="round"/>
+  <circle cx="107" cy="84" r="7" fill="#ffdf7f"/>
+  <circle cx="153" cy="84" r="7" fill="#ffdf7f"/>
+</svg>

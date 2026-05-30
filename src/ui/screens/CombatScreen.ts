@@ -2,9 +2,11 @@ import type { CardDefinition, CardInstance, GameState } from '@/entities';
 import { gameManager } from '@/core/GameManager';
 import { playCard, endPlayerTurn } from '@/systems/combat/CombatSystem';
 import { getCard, getCardCost, getCardEffects } from '@/core/registries/CardRegistry';
+import { getCharacter } from '@/core/registries/CharacterRegistry';
 import { getEnemy } from '@/core/registries/EnemyRegistry';
 import { renderHud } from '@/ui/components/Hud';
 import { createCardElement } from '@/ui/components/CardView';
+import { resolveAssetUrl } from '@/utils/assets';
 
 interface DragState {
   cardInst: CardInstance;
@@ -56,11 +58,43 @@ function getCardPlayReason(def: CardDefinition, cardInst: CardInstance, state: G
   return cardNeedsEnemyTarget(def, cardInst.upgraded) ? '拖到敌人身上打出' : '拖到角色身上打出';
 }
 
+function placeEffect(screen: HTMLElement, className: string, target: HTMLElement): HTMLElement {
+  const screenRect = screen.getBoundingClientRect();
+  const targetRect = target.getBoundingClientRect();
+  const effect = document.createElement('div');
+  effect.className = `combat-effect ${className}`;
+  effect.style.left = `${targetRect.left - screenRect.left + targetRect.width / 2}px`;
+  effect.style.top = `${targetRect.top - screenRect.top + targetRect.height / 2}px`;
+  screen.appendChild(effect);
+  window.setTimeout(() => effect.remove(), 620);
+  return effect;
+}
+
+function playCardWithFeedback(
+  screen: HTMLElement,
+  cardInst: CardInstance,
+  target: HTMLElement,
+  commit: () => void,
+): void {
+  const def = getCard(cardInst.definitionId);
+  const isAttack = def ? cardNeedsEnemyTarget(def, cardInst.upgraded) : Boolean(target.dataset.enemyId);
+  target.classList.add(isAttack ? 'impact-target' : 'buff-target');
+  screen.classList.add(isAttack ? 'screen-impact' : 'screen-guard');
+  placeEffect(screen, isAttack ? 'combat-effect-slash' : 'combat-effect-shield', target);
+
+  window.setTimeout(() => {
+    target.classList.remove('impact-target', 'buff-target');
+    screen.classList.remove('screen-impact', 'screen-guard');
+    commit();
+  }, isAttack ? 270 : 230);
+}
+
 export function renderCombatScreen(root: HTMLElement, state: GameState): void {
   if (!state.combat) return;
 
   const screen = document.createElement('div');
   screen.className = 'screen combat-screen';
+  const character = getCharacter(state.characterId);
   screen.innerHTML = `
     <div class="combat-topbar">
       <div>
@@ -110,7 +144,8 @@ export function renderCombatScreen(root: HTMLElement, state: GameState): void {
         <span>${intentText}</span>
       </div>
       <div class="enemy-portrait" aria-hidden="true">
-        <span>${(def?.name ?? enemy.definitionId).slice(0, 1)}</span>
+        <img class="enemy-sprite" src="${resolveAssetUrl(`assets/enemies/${enemy.definitionId}.svg`)}" alt="${def?.name ?? enemy.definitionId}" />
+        <span class="enemy-sprite-fallback">${(def?.name ?? enemy.definitionId).slice(0, 1)}</span>
       </div>
       <div class="enemy-name-row">
         <strong>${def?.name ?? enemy.definitionId}</strong>
@@ -133,11 +168,15 @@ export function renderCombatScreen(root: HTMLElement, state: GameState): void {
   const hpPct = Math.max(0, Math.min(100, (state.hp / state.maxHp) * 100));
   playerArea.innerHTML = `
     <div class="player-avatar">
-      <span>你</span>
+      ${
+        character?.portrait
+          ? `<img class="player-portrait-img" src="${resolveAssetUrl(character.portrait)}" alt="${character.name}" />`
+          : '<span>你</span>'
+      }
     </div>
     <div class="player-panel-body">
       <div class="player-name-row">
-        <strong>探索者</strong>
+        <strong>${character?.name ?? '探索者'}</strong>
         <span>可将技能/能力牌拖到这里</span>
       </div>
       <div class="player-hpbar"><span style="width: ${hpPct}%"></span></div>
@@ -244,11 +283,13 @@ export function renderCombatScreen(root: HTMLElement, state: GameState): void {
 
     if (!validTarget || !droppedTarget) return;
 
-    if (droppedTarget.dataset.enemyId) {
-      gameManager.updateState((s) => playCard(s, cardInst.instanceId, droppedTarget.dataset.enemyId!));
-    } else {
-      gameManager.updateState((s) => playCard(s, cardInst.instanceId));
-    }
+    playCardWithFeedback(screen, cardInst, droppedTarget, () => {
+      if (droppedTarget.dataset.enemyId) {
+        gameManager.updateState((s) => playCard(s, cardInst.instanceId, droppedTarget.dataset.enemyId!));
+      } else {
+        gameManager.updateState((s) => playCard(s, cardInst.instanceId));
+      }
+    });
   };
 
   const startDrag = (

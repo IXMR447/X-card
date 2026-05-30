@@ -39,12 +39,12 @@ function buildNodePositions(mapNodes: MapNode[]): {
   const sortedFloors = [...floors.entries()].sort((a, b) => a[0] - b[0]);
   const maxPerFloor = Math.max(...sortedFloors.map(([, nodes]) => nodes.length), 1);
   const maxFloor = Math.max(...sortedFloors.map(([floor]) => floor), 0);
-  const width = Math.max(760, maxPerFloor * 170 + 220);
-  const height = Math.max(680, (maxFloor + 1) * 106 + 120);
+  const width = Math.max(680, maxPerFloor * 150 + 180);
+  const height = Math.max(520, (maxFloor + 1) * 82 + 86);
   const positions = new Map<string, NodePosition>();
 
   for (const [floor, nodes] of sortedFloors) {
-    const y = height - 70 - floor * 96;
+    const y = height - 52 - floor * 78;
     const gap = width / (nodes.length + 1);
     nodes.forEach((node, index) => {
       const x = gap * (index + 1);
@@ -126,7 +126,7 @@ export function renderMapScreen(root: HTMLElement, state: GameState): void {
   mapEl.appendChild(svg);
 
   for (let floor = 0; floor <= maxFloor; floor += 1) {
-    const y = height - 70 - floor * 96;
+    const y = height - 52 - floor * 78;
     const label = document.createElement('span');
     label.className = 'map-floor-label';
     label.style.top = `${y}px`;

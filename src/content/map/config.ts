@@ -1,9 +1,9 @@
 import type { MapGenerationConfig } from '@/entities';
 
-/** 地图生成配置 — 本最小版本为 12 层 Act，包含精英与 Boss 节点 */
+/** 地图生成配置 — 短 Act，保持路线选择但避免树状图过密 */
 export const mapConfig: MapGenerationConfig = {
-  floors: 12,
-  pathsPerFloor: 3,
+  floors: 6,
+  pathsPerFloor: 2,
   nodeWeights: {
     combat: 45,
     event: 15,
@@ -13,9 +13,9 @@ export const mapConfig: MapGenerationConfig = {
     elite: 10,
   },
   guaranteedNodes: {
-    3: ['campfire'],
-    6: ['shop'],
+    2: ['campfire'],
+    4: ['shop'],
   },
-  eliteFloors: [4, 8],
-  bossFloor: 12,
+  eliteFloors: [3, 5],
+  bossFloor: 6,
 };

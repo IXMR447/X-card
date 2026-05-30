@@ -278,9 +278,7 @@ body::before {
 
 .combat-arena {
   position: relative;
-  display: grid;
-  gap: 1.25rem;
-  min-height: 430px;
+  min-height: 410px;
   padding: clamp(0.75rem, 2vw, 1.5rem);
   border-radius: var(--radius);
   background:
@@ -292,11 +290,11 @@ body::before {
 
 .enemy-area {
   display: flex;
-  justify-content: center;
+  justify-content: flex-end;
   align-items: flex-start;
   gap: clamp(0.8rem, 2.8vw, 2.2rem);
   min-height: 250px;
-  padding-top: 0.6rem;
+  padding: 0.5rem 0.8rem 0 24rem;
 }
 
 .enemy-card {
@@ -311,6 +309,11 @@ body::before {
   border-radius: var(--radius);
   box-shadow: 0 18px 30px rgba(0, 0, 0, 0.38);
   transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.enemy-card.impact-target {
+  animation: enemyHit 0.34s cubic-bezier(0.2, 1.6, 0.28, 1);
+  border-color: rgba(255, 112, 74, 0.96);
 }
 
 .enemy-card:hover,
@@ -362,17 +365,32 @@ body::before {
 }
 
 .enemy-portrait {
+  position: relative;
   display: grid;
   place-items: center;
   aspect-ratio: 1 / 0.78;
+  min-height: 122px;
   border-radius: var(--radius);
   background:
     radial-gradient(circle at 50% 35%, rgba(255, 207, 126, 0.18), transparent 32%),
     linear-gradient(180deg, #604433, #231915);
   border: 1px solid rgba(255, 226, 169, 0.14);
+  overflow: hidden;
 }
 
-.enemy-portrait span {
+.enemy-sprite {
+  position: relative;
+  z-index: 2;
+  width: 88%;
+  height: 112%;
+  object-fit: contain;
+  object-position: center bottom;
+  filter: drop-shadow(0 14px 9px rgba(0, 0, 0, 0.34));
+}
+
+.enemy-sprite-fallback {
+  position: absolute;
+  z-index: 1;
   display: grid;
   place-items: center;
   width: 4.6rem;
@@ -435,12 +453,14 @@ body::before {
 }
 
 .player-combat-info {
-  justify-self: center;
+  position: absolute;
+  left: clamp(0.9rem, 2.3vw, 1.8rem);
+  bottom: clamp(0.9rem, 2.3vw, 1.8rem);
   display: grid;
-  grid-template-columns: auto minmax(220px, 380px);
-  gap: 0.9rem;
+  grid-template-columns: auto minmax(170px, 270px);
+  gap: 0.8rem;
   align-items: center;
-  width: min(560px, 100%);
+  width: min(430px, calc(100% - 2rem));
   padding: 0.85rem;
   background: linear-gradient(180deg, rgba(48, 62, 61, 0.88), rgba(24, 24, 20, 0.94));
   border: 2px dashed rgba(139, 211, 221, 0.28);
@@ -456,6 +476,11 @@ body::before {
   box-shadow: 0 0 0 3px rgba(80, 173, 195, 0.18), 0 16px 28px rgba(0, 0, 0, 0.35);
 }
 
+.player-combat-info.buff-target {
+  animation: guardPulse 0.4s ease-out;
+  border-color: rgba(139, 232, 222, 0.92);
+}
+
 .player-combat-info.invalid-target {
   border-color: rgba(212, 87, 69, 0.85);
 }
@@ -463,14 +488,22 @@ body::before {
 .player-avatar {
   display: grid;
   place-items: center;
-  width: 5.25rem;
-  height: 5.25rem;
-  border-radius: 50%;
+  width: 6.5rem;
+  height: 7.2rem;
+  overflow: hidden;
+  border-radius: 14px;
   background: linear-gradient(180deg, #446e76, #1c2f31);
   border: 2px solid rgba(187, 238, 234, 0.32);
   color: #e9fffb;
   font-weight: 900;
   font-size: 1.4rem;
+}
+
+.player-portrait-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
 }
 
 .player-panel-body {
@@ -573,6 +606,142 @@ body::before {
 
 .drag-ghost.visible {
   display: block;
+}
+
+.combat-effect {
+  position: absolute;
+  z-index: 35;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+.combat-effect-slash {
+  width: 12rem;
+  height: 6rem;
+}
+
+.combat-effect-slash::before,
+.combat-effect-slash::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 100%;
+  height: 0.9rem;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, #fff7cf 18%, #ff6b3f 48%, transparent 78%);
+  filter: drop-shadow(0 0 14px rgba(255, 86, 45, 0.88));
+  animation: slashCut 0.48s cubic-bezier(0.2, 1, 0.25, 1) forwards;
+}
+
+.combat-effect-slash::before {
+  --slash-rotate: -28deg;
+  transform: rotate(var(--slash-rotate)) scaleX(0);
+}
+
+.combat-effect-slash::after {
+  --slash-rotate: 24deg;
+  transform: rotate(var(--slash-rotate)) scaleX(0);
+  animation-delay: 0.05s;
+}
+
+.combat-effect-shield {
+  width: 8rem;
+  height: 8rem;
+  border-radius: 50%;
+  border: 0.35rem solid rgba(154, 240, 244, 0.88);
+  background: radial-gradient(circle, rgba(178, 250, 255, 0.28), rgba(87, 185, 205, 0.1) 56%, transparent 66%);
+  box-shadow: 0 0 26px rgba(103, 222, 235, 0.55), inset 0 0 22px rgba(225, 255, 255, 0.25);
+  animation: shieldPop 0.5s cubic-bezier(0.18, 1.35, 0.32, 1) forwards;
+}
+
+.screen-impact::after,
+.screen-guard::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.screen-impact::after {
+  background: radial-gradient(circle at 68% 36%, rgba(255, 120, 72, 0.34), transparent 30%);
+  animation: screenFlash 0.28s ease-out;
+}
+
+.screen-guard::after {
+  background: radial-gradient(circle at 22% 54%, rgba(122, 239, 248, 0.24), transparent 28%);
+  animation: screenFlash 0.32s ease-out;
+}
+
+@keyframes slashCut {
+  0% {
+    opacity: 0;
+    transform: rotate(var(--slash-rotate)) scaleX(0) translateX(-2rem);
+  }
+  35% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(var(--slash-rotate)) scaleX(1.08) translateX(1.8rem);
+  }
+}
+
+@keyframes shieldPop {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.35);
+  }
+  45% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.25);
+  }
+}
+
+@keyframes screenFlash {
+  0% {
+    opacity: 0;
+  }
+  35% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes enemyHit {
+  0% {
+    transform: translateY(0) scale(1);
+  }
+  28% {
+    transform: translate(0.75rem, -0.25rem) scale(1.04);
+    filter: brightness(1.45);
+  }
+  58% {
+    transform: translate(-0.45rem, 0.1rem) scale(0.98);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes guardPulse {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.04);
+    filter: brightness(1.25);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 .combat-actions {
@@ -1048,8 +1217,8 @@ button.card:disabled,
   display: grid;
   place-items: center;
   gap: 0.12rem;
-  width: 4.85rem;
-  height: 4.85rem;
+  width: 4.05rem;
+  height: 4.05rem;
   padding: 0.4rem;
   transform: translate(-50%, -50%);
   border: 2px solid rgba(255, 228, 173, 0.2);
@@ -1070,16 +1239,16 @@ button.card:disabled,
 .map-node-icon {
   display: grid;
   place-items: center;
-  width: 2rem;
-  height: 2rem;
+  width: 1.7rem;
+  height: 1.7rem;
   color: #fff0ca;
-  font-size: 1.05rem;
+  font-size: 0.92rem;
   font-weight: 900;
 }
 
 .map-node-label {
   color: rgba(255, 238, 201, 0.84);
-  font-size: 0.7rem;
+  font-size: 0.64rem;
   font-weight: 800;
   line-height: 1;
 }
@@ -1128,24 +1297,32 @@ button.card:disabled,
 }
 
 .map-node-boss {
-  width: 5.6rem;
-  height: 5.6rem;
+  width: 4.85rem;
+  height: 4.85rem;
   background: radial-gradient(circle at 50% 28%, rgba(255, 223, 142, 0.28), transparent 28%), linear-gradient(180deg, #8e3d33, #1d1212);
 }
 
 .map-node-event {
+  width: 3.65rem;
+  height: 3.65rem;
   background: linear-gradient(180deg, #6f5a8d, #2b2242);
 }
 
 .map-node-shop {
+  width: 3.75rem;
+  height: 3.75rem;
   background: linear-gradient(180deg, #8f7540, #3a2b18);
 }
 
 .map-node-campfire {
+  width: 3.75rem;
+  height: 3.75rem;
   background: linear-gradient(180deg, #ba6b37, #452313);
 }
 
 .map-node-treasure {
+  width: 3.75rem;
+  height: 3.75rem;
   background: linear-gradient(180deg, #a58346, #432e16);
 }
 
@@ -1267,10 +1444,15 @@ button.card:disabled,
     min-height: auto;
   }
 
+  .combat-arena {
+    min-height: 560px;
+  }
+
   .enemy-area {
     display: grid;
     grid-template-columns: 1fr;
     justify-items: center;
+    padding: 0.5rem 0.25rem 9.5rem;
   }
 
   .enemy-card {
@@ -1278,6 +1460,10 @@ button.card:disabled,
   }
 
   .player-combat-info {
+    left: 0.75rem;
+    right: 0.75rem;
+    bottom: 0.75rem;
+    width: auto;
     grid-template-columns: 1fr;
     justify-items: center;
     text-align: center;
@@ -1308,13 +1494,13 @@ button.card:disabled,
   }
 
   .map-node {
-    width: 4.45rem;
-    height: 4.45rem;
+    width: 3.8rem;
+    height: 3.8rem;
   }
 
   .map-node-boss {
-    width: 5.1rem;
-    height: 5.1rem;
+    width: 4.5rem;
+    height: 4.5rem;
   }
 
   .combat-actions {
