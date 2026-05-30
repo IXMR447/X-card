@@ -17,6 +17,11 @@
   --attack: #c45c5c;
   --skill: #5c8fc4;
   --power: #9b6bc4;
+  --hand-card-spacing: 0.95rem;
+  --card-hover-scale: 1.08;
+  --card-hover-lift: -1rem;
+  --card-hover-rotation: 0deg;
+  --card-disabled-opacity: 0.45;
   --radius: 14px;
   --font: 'Inter', 'Segoe UI', system-ui, sans-serif;
 }
@@ -390,10 +395,60 @@ body::before {
 }
 
 .hand {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 1rem;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: var(--hand-card-spacing);
   margin: 1rem 0;
+}
+
+.ui-config-panel {
+  margin: 1.5rem auto 0;
+  max-width: 1080px;
+  background: rgba(17, 24, 36, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: calc(var(--radius) * 1.05);
+  padding: 1.4rem 1.5rem;
+  color: var(--text);
+}
+
+.ui-config-panel h3 {
+  margin: 0 0 0.35rem;
+  font-size: 1.05rem;
+}
+
+.ui-config-panel p {
+  margin: 0 0 1rem;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.config-row {
+  display: grid;
+  grid-template-columns: 160px minmax(180px, 1fr) 4rem;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.85rem;
+}
+
+.config-row:last-child {
+  margin-bottom: 0;
+}
+
+.config-row label {
+  color: var(--text);
+  font-size: 0.95rem;
+}
+
+.config-row input[type='range'] {
+  width: 100%;
+}
+
+.config-value {
+  text-align: right;
+  color: var(--muted);
+  font-size: 0.95rem;
 }
 
 .combat-actions {
@@ -430,13 +485,14 @@ body::before {
 }
 
 .card:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+  transform: translateY(var(--card-hover-lift)) scale(var(--card-hover-scale)) rotate(var(--card-hover-rotation));
+  box-shadow: 0 24px 50px rgba(0, 0, 0, 0.28);
   border-color: rgba(107, 155, 209, 0.45);
 }
 
+button.card:disabled,
 .card[disabled] {
-  opacity: 0.5;
+  opacity: var(--card-disabled-opacity);
   cursor: not-allowed;
 }
 
