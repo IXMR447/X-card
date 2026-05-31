@@ -90,12 +90,12 @@ function placeEffect(screen: HTMLElement, className: string, target: HTMLElement
   effect.className = `combat-effect ${className}`;
   effect.style.left = `${targetRect.left - screenRect.left + targetRect.width / 2}px`;
   effect.style.top = `${targetRect.top - screenRect.top + targetRect.height / 2}px`;
-  for (let i = 0; i < 10; i += 1) {
+  for (let i = 0; i < 14; i += 1) {
     const spark = document.createElement('span');
     spark.className = 'combat-effect-spark';
-    spark.style.setProperty('--spark-angle', `${i * 36}deg`);
-    spark.style.setProperty('--spark-distance', `${42 + (i % 3) * 18}px`);
-    spark.style.setProperty('--spark-delay', `${i * 18}ms`);
+    spark.style.setProperty('--spark-angle', `${i * (360 / 14)}deg`);
+    spark.style.setProperty('--spark-distance', `${48 + (i % 3) * 20}px`);
+    spark.style.setProperty('--spark-delay', `${i * 14}ms`);
     effect.appendChild(spark);
   }
   screen.appendChild(effect);
