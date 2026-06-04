@@ -10,6 +10,8 @@ import { renderShopScreen } from './screens/ShopScreen';
 import { renderCampfireScreen } from './screens/CampfireScreen';
 import { renderEventScreen } from './screens/EventScreen';
 import { renderGameOverScreen } from './screens/GameOverScreen';
+import { renderCollectionScreen } from './screens/CollectionScreen';
+import { runGsapAnimations } from './animation/GsapAnimations';
 
 export class GameApp {
   private root: HTMLElement;
@@ -17,10 +19,32 @@ export class GameApp {
   constructor(root: HTMLElement) {
     this.root = root;
     gameManager.subscribe((state) => this.render(state));
+    window.addEventListener('hashchange', () => this.handleHashRoute());
   }
 
   init(): void {
+    this.handleHashRoute();
     this.render(gameManager.getState());
+  }
+
+  private handleHashRoute(): void {
+    if (window.location.hash === '#character-select') {
+      gameManager.goToCharacterSelect();
+    }
+    if (window.location.hash === '#main-menu') {
+      gameManager.returnToMenu();
+    }
+    if (window.location.hash.startsWith('#collection')) {
+      this.render(gameManager.getState());
+    }
+    if (window.location.hash.startsWith('#start-run-')) {
+      const characterId = window.location.hash.replace('#start-run-', '');
+      gameManager.startRun(characterId);
+    }
+    if (window.location.hash.startsWith('#map-node-')) {
+      const nodeId = window.location.hash.replace('#map-node-', '');
+      gameManager.selectMapNode(nodeId);
+    }
   }
 
   private render(state: GameState): void {
@@ -28,6 +52,13 @@ export class GameApp {
 
     const screenRoot = document.createElement('div');
     screenRoot.className = 'screen-root';
+
+    if (window.location.hash.startsWith('#collection')) {
+      renderCollectionScreen(screenRoot);
+      this.root.appendChild(screenRoot);
+      runGsapAnimations(screenRoot);
+      return;
+    }
 
     switch (state.phase) {
       case 'main_menu':
@@ -66,6 +97,7 @@ export class GameApp {
     }
 
     this.root.appendChild(screenRoot);
+    runGsapAnimations(screenRoot);
   }
 
   private renderTreasure(_state: GameState, root: HTMLElement): void {

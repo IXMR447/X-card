@@ -90,16 +90,19 @@ function placeEffect(screen: HTMLElement, className: string, target: HTMLElement
   effect.className = `combat-effect ${className}`;
   effect.style.left = `${targetRect.left - screenRect.left + targetRect.width / 2}px`;
   effect.style.top = `${targetRect.top - screenRect.top + targetRect.height / 2}px`;
-  for (let i = 0; i < 14; i += 1) {
+  const core = document.createElement('span');
+  core.className = 'combat-effect-core';
+  effect.appendChild(core);
+  for (let i = 0; i < 24; i += 1) {
     const spark = document.createElement('span');
     spark.className = 'combat-effect-spark';
-    spark.style.setProperty('--spark-angle', `${i * (360 / 14)}deg`);
-    spark.style.setProperty('--spark-distance', `${48 + (i % 3) * 20}px`);
-    spark.style.setProperty('--spark-delay', `${i * 14}ms`);
+    spark.style.setProperty('--spark-angle', `${i * (360 / 24)}deg`);
+    spark.style.setProperty('--spark-distance', `${54 + (i % 5) * 18}px`);
+    spark.style.setProperty('--spark-delay', `${i * 9}ms`);
     effect.appendChild(spark);
   }
   screen.appendChild(effect);
-  window.setTimeout(() => effect.remove(), 860);
+  window.setTimeout(() => effect.remove(), 1100);
   return effect;
 }
 
@@ -160,7 +163,21 @@ export function renderCombatScreen(root: HTMLElement, state: GameState): void {
 
   const arena = document.createElement('section');
   arena.className = 'combat-arena';
-  arena.innerHTML = ``;
+  arena.innerHTML = `
+    <div class="arena-fx-layer" aria-hidden="true">
+      <span class="arena-lightning fx-a"></span>
+      <span class="arena-lightning fx-b"></span>
+      <span class="arena-energy-ring"></span>
+      <span class="arena-fog fog-a"></span>
+      <span class="arena-fog fog-b"></span>
+      <span class="arena-ember e1"></span>
+      <span class="arena-ember e2"></span>
+      <span class="arena-ember e3"></span>
+      <span class="arena-ember e4"></span>
+      <span class="arena-ember e5"></span>
+      <span class="arena-ember e6"></span>
+    </div>
+  `;
 
   const enemyArea = document.createElement('div');
   enemyArea.className = 'enemy-area';

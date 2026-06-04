@@ -4,21 +4,20 @@ import { pickRandomEvent } from '@/core/registries/EventRegistry';
 import { randomInt } from '@/utils/random';
 
 const NODE_ICONS: Record<MapNodeType, string> = {
-  start: '起',
-  combat: '战',
-  elite: '精',
-  boss: 'Boss',
-  event: '?',
-  shop: '$',
-  campfire: '火',
-  treasure: '箱',
+  start: '⌂',
+  combat: '⚔',
+  elite: '✦',
+  boss: '♛',
+  event: '✧',
+  shop: '◆',
+  campfire: '☄',
+  treasure: '◇',
 };
 
 export function getNodeIcon(type: MapNodeType): string {
   return NODE_ICONS[type];
 }
 
-/** 根据配置生成 Act 地图 */
 export function generateMap(config: MapGenerationConfig, act = 1): GameMap {
   const nodes: MapNode[] = [];
   let nodeCounter = 0;
@@ -45,22 +44,23 @@ export function generateMap(config: MapGenerationConfig, act = 1): GameMap {
     return node;
   };
 
-  // 第 0 层：起点
   const start = createNode(0, 'start');
   start.current = true;
   nodes.push(start);
 
-  // 中间层
   for (let floor = 1; floor < config.bossFloor; floor++) {
     const guaranteed = config.guaranteedNodes[floor] ?? [];
-    const nodeCount = config.pathsPerFloor + randomInt(0, 1);
+    const nodeCount = config.pathsPerFloor + randomInt(0, 2);
 
     for (let i = 0; i < nodeCount; i++) {
       let type: MapNodeType;
       if (guaranteed[i]) {
         type = guaranteed[i];
       } else if (config.eliteFloors.includes(floor)) {
-        type = Math.random() < 0.3 ? 'elite' : weightedPick(config.nodeWeights, ['combat', 'event', 'shop', 'campfire', 'treasure']);
+        type =
+          Math.random() < 0.35
+            ? 'elite'
+            : weightedPick(config.nodeWeights, ['combat', 'event', 'shop', 'campfire', 'treasure']);
       } else {
         type = weightedPick(config.nodeWeights, ['combat', 'event', 'shop', 'campfire', 'treasure']);
       }
@@ -68,11 +68,9 @@ export function generateMap(config: MapGenerationConfig, act = 1): GameMap {
     }
   }
 
-  // Boss 层
   const boss = createNode(config.bossFloor, 'boss');
   nodes.push(boss);
 
-  // 连接节点：每层连到下一层
   connectLayers(nodes, config.bossFloor);
 
   return {
@@ -84,7 +82,7 @@ export function generateMap(config: MapGenerationConfig, act = 1): GameMap {
 
 function weightedPick(
   weights: Partial<Record<MapNodeType, number>>,
-  fallback: MapNodeType[]
+  fallback: MapNodeType[],
 ): MapNodeType {
   const entries = Object.entries(weights).filter(([, w]) => (w ?? 0) > 0) as [MapNodeType, number][];
   if (entries.length === 0) {
@@ -112,16 +110,30 @@ function connectLayers(nodes: MapNode[], bossFloor: number): void {
     if (next.length === 0) continue;
 
     for (const node of current) {
-      const targets = pickConnections(node, next);
+      const targets = pickConnections(next);
       node.connections = targets.map((t) => t.id);
     }
+
+    ensureIncomingConnections(current, next);
   }
 }
 
-function pickConnections(_from: MapNode, nextLayer: MapNode[]): MapNode[] {
+function pickConnections(nextLayer: MapNode[]): MapNode[] {
   const shuffled = [...nextLayer].sort(() => Math.random() - 0.5);
-  const count = Math.min(shuffled.length, randomInt(1, 2));
+  const count = Math.min(shuffled.length, randomInt(2, 3));
   return shuffled.slice(0, count);
+}
+
+function ensureIncomingConnections(previousLayer: MapNode[], nextLayer: MapNode[]): void {
+  if (previousLayer.length === 0) return;
+
+  for (const target of nextLayer) {
+    const hasIncoming = previousLayer.some((node) => node.connections.includes(target.id));
+    if (hasIncoming) continue;
+
+    const source = previousLayer[randomInt(0, previousLayer.length - 1)];
+    source.connections.push(target.id);
+  }
 }
 
 export function getAvailableNodes(map: GameMap): MapNode[] {

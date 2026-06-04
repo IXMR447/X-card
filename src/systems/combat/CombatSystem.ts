@@ -1,6 +1,7 @@
-import type { CardEffect, CombatState, CombatType, GameState, RewardState } from '@/entities';
+﻿import type { CardEffect, CombatState, CombatType, GameState, RewardState } from '@/entities';
 import { GAME, REWARD_GOLD } from '@/core/constants';
 import { eventBus, GameEvents } from '@/core/EventBus';
+import { dispatchRelicEvent } from '@/systems/relics/RelicSystem';
 import {
   getCard,
   getCardCost,
@@ -16,6 +17,7 @@ import {
 import { getCardRewardPool } from '@/core/registries/CardRegistry';
 import { pickRandomPotion } from '@/core/registries/PotionRegistry';
 import { getBossRelicPool, getRelicRewardPool } from '@/core/registries/RelicRegistry';
+import { markCollected } from '@/systems/collection/CollectionSystem';
 
 const TEMPORARY_STATUSES = new Set(['vulnerable', 'weak', 'frail']);
 const PLAYER_TURN_START_DECAY = new Set(['burn']);
@@ -75,7 +77,21 @@ function calculateBlock(baseBlock: number, statuses: Map<string, number> | undef
   return Math.max(0, block);
 }
 
+function effectRequiresEnemyTarget(effects: CardEffect): boolean {
+  return Boolean(
+    effects.damage ||
+      effects.applyStatus?.target === 'enemy' ||
+      effects.applyStatus?.target === 'all_enemies',
+  );
+}
+
+function hasLiveTarget(state: GameState, targetEnemyId: string | undefined): boolean {
+  if (!targetEnemyId || !state.combat) return false;
+  return state.combat.enemies.some((enemy) => enemy.instanceId === targetEnemyId && enemy.hp > 0);
+}
+
 export function startCombat(state: GameState, type: CombatType, enemyIds: string[]): GameState {
+  markCollected('enemies', enemyIds);
   const enemies = enemyIds.map((id) => {
     const def = getEnemy(id);
     if (!def) throw new Error(`Enemy not found: ${id}`);
@@ -101,17 +117,23 @@ export function startCombat(state: GameState, type: CombatType, enemyIds: string
     playerBlock: 0,
     playerStatuses: new Map(),
     cardsPlayedThisTurn: 0,
+    skillCardsPlayedThisTurn: 0,
   };
 
-  eventBus.emit(GameEvents.BATTLE_START, { type });
-
-  const next = { ...state, phase: 'combat' as const, combat, energy: state.maxEnergy };
-  return drawCards(startPlayerTurn(next), GAME.DRAW_PER_TURN);
+  let next: GameState = { ...state, phase: 'combat', combat, energy: state.maxEnergy };
+  next = preparePlayerTurn(next);
+  next = dispatchRelicEvent(next, GameEvents.BATTLE_START, { type });
+  next = dispatchRelicEvent(next, GameEvents.TURN_START, { turn: next.combat?.turn });
+  return drawCards(next, GAME.DRAW_PER_TURN);
 }
 
 function startPlayerTurn(state: GameState): GameState {
+  const next = preparePlayerTurn(state);
+  return dispatchRelicEvent(next, GameEvents.TURN_START, { turn: next.combat?.turn });
+}
+
+function preparePlayerTurn(state: GameState): GameState {
   if (!state.combat) return state;
-  eventBus.emit(GameEvents.TURN_START, { turn: state.combat.turn });
   let hp = state.hp;
   let statuses = new Map(state.combat.playerStatuses);
   const burn = getStatusValue(statuses, 'burn');
@@ -131,6 +153,7 @@ function startPlayerTurn(state: GameState): GameState {
       playerBlock,
       playerStatuses: statuses,
       cardsPlayedThisTurn: 0,
+      skillCardsPlayedThisTurn: 0,
     },
   };
 }
@@ -173,40 +196,40 @@ export function playCard(state: GameState, cardInstanceId: string, targetEnemyId
   const cost = getCardCost(cardDef, cardInst.upgraded);
   if (state.energy < cost) return state;
 
-  let next = { ...state, energy: state.energy - cost };
   const effects = getCardEffects(cardDef, cardInst.upgraded);
+  if (effectRequiresEnemyTarget(effects) && !hasLiveTarget(state, targetEnemyId)) return state;
 
-  // 应用效果
-  next = applyCardEffects(next, effects, targetEnemyId);
+  markCollected('cards', cardDef.id);
 
-  // 移动卡牌
-  const played = cardInst;
-  const newHand = state.combat.hand.filter((c) => c.instanceId !== cardInstanceId);
-  const discardPile = [...state.combat.discardPile];
-  const exhaustPile = [...state.combat.exhaustPile];
-
-  if (cardDef.exhaust) {
-    exhaustPile.push(played);
-  } else {
-    discardPile.push(played);
-    eventBus.emit(GameEvents.CARD_DISCARDED, { card: played });
-  }
-
-  next = {
-    ...next,
+  let next: GameState = {
+    ...state,
+    energy: state.energy - cost,
     combat: {
-      ...next.combat!,
-      hand: newHand,
-      discardPile,
-      exhaustPile,
-      cardsPlayedThisTurn: next.combat!.cardsPlayedThisTurn + 1,
+      ...state.combat,
+      hand: state.combat.hand.filter((c) => c.instanceId !== cardInstanceId),
+      cardsPlayedThisTurn: state.combat.cardsPlayedThisTurn + 1,
+      skillCardsPlayedThisTurn:
+        state.combat.skillCardsPlayedThisTurn + (cardDef.type === 'skill' ? 1 : 0),
     },
-    stats: { ...next.stats, cardsPlayed: next.stats.cardsPlayed + 1 },
+    stats: { ...state.stats, cardsPlayed: state.stats.cardsPlayed + 1 },
   };
 
-  eventBus.emit(GameEvents.CARD_PLAYED, { card: cardInst, definition: cardDef });
+  next = applyCardEffects(next, effects, targetEnemyId);
 
-  // 检查敌人死亡
+  if (cardDef.exhaust) {
+    next = {
+      ...next,
+      combat: { ...next.combat!, exhaustPile: [...next.combat!.exhaustPile, cardInst] },
+    };
+  } else {
+    eventBus.emit(GameEvents.CARD_DISCARDED, { card: cardInst });
+    next = {
+      ...next,
+      combat: { ...next.combat!, discardPile: [...next.combat!.discardPile, cardInst] },
+    };
+  }
+
+  next = dispatchRelicEvent(next, GameEvents.CARD_PLAYED, { card: cardInst, definition: cardDef });
   next = removeDeadEnemies(next);
 
   if (isCombatWon(next)) {
@@ -332,7 +355,7 @@ function removeDeadEnemies(state: GameState): GameState {
 export function endPlayerTurn(state: GameState): GameState {
   if (!state.combat) return state;
 
-  // 弃掉手牌
+  // 寮冩帀鎵嬬墝
   const discardedHand = state.combat.hand;
   let next: GameState = {
     ...state,
@@ -345,7 +368,7 @@ export function endPlayerTurn(state: GameState): GameState {
   };
   discardedHand.forEach((c) => eventBus.emit(GameEvents.CARD_DISCARDED, { card: c }));
 
-  // 敌人行动
+  // 鏁屼汉琛屽姩
   next = executeEnemyTurn(next);
 
   if (next.hp <= 0) {
@@ -356,7 +379,7 @@ export function endPlayerTurn(state: GameState): GameState {
     return endCombat(next, true);
   }
 
-  // 新回合
+  // 鏂板洖鍚?
   const combat = { ...next.combat!, turn: next.combat!.turn + 1 };
   next = { ...next, combat, energy: next.maxEnergy };
   next = startPlayerTurn(next);
@@ -506,3 +529,4 @@ export function getEnemyIntents(state: GameState): Map<string, string> {
   }
   return result;
 }
+

@@ -9,6 +9,8 @@ import { enterShop } from '@/systems/shop/ShopSystem';
 import { enterCampfire } from '@/systems/campfire/CampfireSystem';
 import { enterEvent } from '@/systems/events/EventSystem';
 import type { ShopInventory } from '@/systems/shop/ShopSystem';
+import { markCollected } from '@/systems/collection/CollectionSystem';
+import { packSaveSlot } from '@/services/serialization';
 
 type StateListener = (state: GameState) => void;
 
@@ -20,7 +22,6 @@ export class GameManager {
   constructor() {
     this.state = this.createInitialState();
   }
-
   private createInitialState(): GameState {
     return {
       phase: 'main_menu',
@@ -33,6 +34,7 @@ export class GameManager {
       deck: [],
       relics: [],
       potions: [],
+      recentRelicActivations: [],
       map: null,
       combat: null,
       pendingReward: null,
@@ -68,6 +70,10 @@ export class GameManager {
   startRun(characterId: string): void {
     const character = getCharacter(characterId);
     if (!character) return;
+
+    markCollected('characters', character.id);
+    markCollected('cards', character.startingDeck);
+    markCollected('relics', character.startingRelics);
 
     const map = generateMap(mapConfig, 1);
     this.setState({
@@ -131,6 +137,54 @@ export class GameManager {
   returnToMenu(): void {
     this.shopInventory = null;
     this.setState(this.createInitialState());
+  }
+
+  loadState(state: GameState): void {
+    this.setState(state);
+  }
+
+  getCurrentFloor(): number {
+    if (!this.state.map) return 0;
+    const node = getCurrentNode(this.state.map);
+    return node?.floor ?? 0;
+  }
+
+  async saveCurrentRun(slotIndex: number): Promise<void> {
+    const state = this.state;
+    const character = getCharacter(state.characterId);
+    const characterName = character?.name ?? 'Unknown';
+    const floor = this.getCurrentFloor();
+    const slot = packSaveSlot(state, characterName, floor);
+
+    // Always save to localStorage as backup
+    const saves = (() => {
+      try {
+        const raw = localStorage.getItem('x-card-save-slots');
+        const arr = raw ? JSON.parse(raw) : [];
+        return Array.isArray(arr) ? arr : [];
+      } catch {
+        return [];
+      }
+    })();
+    const idx = saves.findIndex((s: { slotIndex: number }) => s.slotIndex === slotIndex);
+    const entry = { slotIndex, data: slot };
+    if (idx >= 0) {
+      saves[idx] = entry;
+    } else {
+      saves.push(entry);
+    }
+    localStorage.setItem('x-card-save-slots', JSON.stringify(saves));
+
+    // Also save to cloud if logged in
+    try {
+      const { authService } = await import('@/services/AuthService');
+      if (authService.isLoggedIn()) {
+        const { cloudSaveService } = await import('@/services/CloudSaveService');
+        await cloudSaveService.saveGameToSlot(slotIndex, state, characterName, floor);
+      }
+    } catch {
+      // Cloud save is best-effort
+    }
   }
 }
 

@@ -1,5 +1,7 @@
 import type { GameState } from '@/entities';
 import { gameManager } from '@/core/GameManager';
+import { authService } from '@/services/AuthService';
+import { cloudSaveService } from '@/services/CloudSaveService';
 
 export function renderGameOverScreen(root: HTMLElement, state: GameState): void {
   const screen = document.createElement('div');
@@ -23,4 +25,30 @@ export function renderGameOverScreen(root: HTMLElement, state: GameState): void 
   btn.addEventListener('click', () => gameManager.returnToMenu());
   screen.appendChild(btn);
   root.appendChild(screen);
+
+  // Clean up save slot for finished run (slot 0)
+  (async () => {
+    try {
+      const saves = (() => {
+        try {
+          const raw = localStorage.getItem('x-card-save-slots');
+          const arr = raw ? JSON.parse(raw) : [];
+          return Array.isArray(arr) ? arr : [];
+        } catch {
+          return [];
+        }
+      })();
+      const filtered = saves.filter((s: { slotIndex: number }) => s.slotIndex !== 0);
+      localStorage.setItem('x-card-save-slots', JSON.stringify(filtered));
+    } catch {
+      // ignore
+    }
+    if (authService.isLoggedIn()) {
+      try {
+        await cloudSaveService.deleteSaveSlot(0);
+      } catch {
+        // ignore
+      }
+    }
+  })();
 }

@@ -18,6 +18,10 @@ export function getEnemiesByTier(tier: EnemyTier): EnemyDefinition[] {
   return Array.from(registry.values()).filter((e) => e.tier === tier);
 }
 
+export function getAllEnemies(): EnemyDefinition[] {
+  return Array.from(registry.values());
+}
+
 export function pickRandomEnemy(tier: EnemyTier, exclude: string[] = []): EnemyDefinition | undefined {
   const pool = getEnemiesByTier(tier).filter((e) => !exclude.includes(e.id));
   if (pool.length === 0) return undefined;

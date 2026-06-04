@@ -1,6 +1,7 @@
 import type { GameState } from '@/entities';
 import { SHOP_PRICES, GAME } from '@/core/constants';
 import { eventBus, GameEvents } from '@/core/EventBus';
+import { dispatchRelicEvent } from '@/systems/relics/RelicSystem';
 import { getCard } from '@/core/registries/CardRegistry';
 import { getRelic } from '@/core/registries/RelicRegistry';
 import { getPotion } from '@/core/registries/PotionRegistry';
@@ -17,9 +18,9 @@ export interface ShopInventory {
   removeCardPrice: number;
 }
 
-export function generateShopInventory(characterId: string): ShopInventory {
+export function generateShopInventory(characterId: string, ownedRelicIds: string[] = []): ShopInventory {
   const cardPool = pickRandom(getCardRewardPool(characterId), 5);
-  const relicPool = pickRandom(getRelicRewardPool(), 2);
+  const relicPool = pickRandom(getRelicRewardPool(ownedRelicIds), 2);
   const potionPool = pickRandom(getAllPotions(), 3);
 
   return {
@@ -44,9 +45,12 @@ function randPrice(min: number, max: number): number {
 }
 
 export function enterShop(state: GameState): { state: GameState; inventory: ShopInventory } {
-  eventBus.emit(GameEvents.ENTER_SHOP);
-  const inventory = generateShopInventory(state.characterId);
-  return { state: { ...state, phase: 'shop' }, inventory };
+  const next = dispatchRelicEvent(state, GameEvents.ENTER_SHOP);
+  const inventory = generateShopInventory(
+    next.characterId,
+    next.relics.map((relic) => relic.definitionId),
+  );
+  return { state: { ...next, phase: 'shop' }, inventory };
 }
 
 export function leaveShop(state: GameState): GameState {
@@ -60,7 +64,8 @@ export function buyCard(state: GameState, cardId: string, price: number): GameSt
 }
 
 export function buyRelic(state: GameState, relicId: string, price: number): GameState {
-  if (state.gold < price || !getRelic(relicId)) return state;
+  const alreadyOwned = state.relics.some((r) => r.definitionId === relicId);
+  if (state.gold < price || !getRelic(relicId) || alreadyOwned) return state;
   return addRelic({ ...state, gold: state.gold - price }, relicId);
 }
 

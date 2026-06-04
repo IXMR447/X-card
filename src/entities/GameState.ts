@@ -30,6 +30,7 @@ export interface GameState {
   deck: CardInstance[];
   relics: RelicInstance[];
   potions: PotionInstance[];
+  recentRelicActivations: RelicActivation[];
   map: GameMap | null;
   combat: CombatState | null;
   pendingReward: RewardState | null;
@@ -39,6 +40,12 @@ export interface GameState {
     combatsWon: number;
     cardsPlayed: number;
   };
+}
+
+export interface RelicActivation {
+  relicId: string;
+  name: string;
+  message: string;
 }
 
 export interface CombatState {
@@ -52,6 +59,7 @@ export interface CombatState {
   playerBlock: number;
   playerStatuses: Map<string, number>;
   cardsPlayedThisTurn: number;
+  skillCardsPlayedThisTurn: number;
 }
 
 export interface RewardState {

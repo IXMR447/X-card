@@ -2,8 +2,8 @@ import type { MapGenerationConfig } from '@/entities';
 
 /** 地图生成配置 — 短 Act，保持路线选择但避免树状图过密 */
 export const mapConfig: MapGenerationConfig = {
-  floors: 6,
-  pathsPerFloor: 2,
+  floors: 12,
+  pathsPerFloor: 3,
   nodeWeights: {
     combat: 45,
     event: 15,
@@ -15,7 +15,9 @@ export const mapConfig: MapGenerationConfig = {
   guaranteedNodes: {
     2: ['campfire'],
     4: ['shop'],
+    7: ['campfire', 'shop'],
+    10: ['elite'],
   },
-  eliteFloors: [3, 5],
-  bossFloor: 6,
+  eliteFloors: [3, 5, 8, 10],
+  bossFloor: 12,
 };

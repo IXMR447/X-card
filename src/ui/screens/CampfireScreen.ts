@@ -14,7 +14,10 @@ export function renderCampfireScreen(root: HTMLElement, state: GameState): void 
         <h2>篝火</h2>
         <p class="screen-subtitle">休息或升级一张卡牌</p>
       </div>
-      <button class="btn btn-secondary" id="btn-leave-campfire">离开篝火</button>
+      <div class="campfire-header-actions">
+        <button class="btn btn-secondary" id="btn-save-exit">保存并退出</button>
+        <button class="btn btn-secondary" id="btn-leave-campfire">离开篝火</button>
+      </div>
     </div>
   `;
 
@@ -33,6 +36,18 @@ export function renderCampfireScreen(root: HTMLElement, state: GameState): void 
 
   screen.querySelector('#btn-leave-campfire')?.addEventListener('click', () => {
     gameManager.updateState((s) => ({ ...s, phase: 'map' }));
+  });
+
+  screen.querySelector('#btn-save-exit')?.addEventListener('click', async () => {
+    const btn = screen.querySelector('#btn-save-exit') as HTMLButtonElement;
+    btn.disabled = true;
+    btn.textContent = '保存中...';
+    try {
+      await gameManager.saveCurrentRun(0);
+    } catch {
+      // saveCurrentRun handles errors internally
+    }
+    gameManager.returnToMenu();
   });
 
   const upgradeable = getUpgradeableCards(state);
